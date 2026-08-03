@@ -54,7 +54,7 @@ const axios = require("axios");
 const verifyEmailTemplate = require("../templates/verifyEmail");
 
 const sendVerificationEmail = async (name, email, token) => {
-    const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${token}`;
+    const verificationUrl = `${process.env.SERVER_URL}/api/auth/verify-email/${token}`;
 
     try {
         const response = await axios.post(
