@@ -70,8 +70,40 @@ const login = asyncHandler(async (req, res) => {
 
 });
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Current user fetched successfully",
+            req.user
+        )
+    );
+
+});
+
+const logout = asyncHandler(async (req, res) => {
+
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+    });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Logged out successfully"
+        )
+    );
+
+});
+
+
 module.exports = {
     register,
     verifyEmail,
     login,
+    getCurrentUser,
+    logout,
 };

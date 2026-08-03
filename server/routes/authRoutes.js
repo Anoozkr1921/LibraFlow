@@ -1,16 +1,34 @@
 const express = require("express");
 const router = express.Router();
-const { register } = require("../controllers/authController");
+
+const {
+    register,
+    verifyEmail,
+    login,
+    getCurrentUser,
+    logout,
+} = require("../controllers/authController");
 
 const validate = require("../middleware/validate");
+const verifyJWT = require("../middleware/authMiddleware");
 
-const { verifyEmail } = require("../controllers/authController");
+const {
+    registerValidator,
+    loginValidator,
+} = require("../validators/authValidator");
 
-router.get("/verify-email/:token", verifyEmail);
+// Public Routes
+router.post(
+    "/register",
+    registerValidator,
+    validate,
+    register
+);
 
-const { login } = require("../controllers/authController");
-
-const { loginValidator } = require("../validators/authValidator");
+router.get(
+    "/verify-email/:token",
+    verifyEmail
+);
 
 router.post(
     "/login",
@@ -19,13 +37,17 @@ router.post(
     login
 );
 
-const { registerValidator } = require("../validators/authValidator");
+// Protected Routes
+router.get(
+    "/me",
+    verifyJWT,
+    getCurrentUser
+);
 
 router.post(
-    "/register",
-    registerValidator,
-    validate,
-    register
+    "/logout",
+    verifyJWT,
+    logout
 );
 
 module.exports = router;
