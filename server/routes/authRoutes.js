@@ -8,6 +8,17 @@ const { verifyEmail } = require("../controllers/authController");
 
 router.get("/verify-email/:token", verifyEmail);
 
+const { login } = require("../controllers/authController");
+
+const { loginValidator } = require("../validators/authValidator");
+
+router.post(
+    "/login",
+    loginValidator,
+    validate,
+    login
+);
+
 const { registerValidator } = require("../validators/authValidator");
 
 router.post(
