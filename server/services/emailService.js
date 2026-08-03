@@ -57,6 +57,8 @@ const sendVerificationEmail = async (name, email, token) => {
     const verificationUrl = `${process.env.SERVER_URL}/api/auth/verify-email/${token}`;
 
     try {
+        console.log("SERVER_URL:", process.env.SERVER_URL);
+        console.log("BREVO KEY:", process.env.BREVO_API_KEY?.substring(0, 15));
         const response = await axios.post(
             "https://api.brevo.com/v3/smtp/email",
             {
