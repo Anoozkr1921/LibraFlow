@@ -72,12 +72,6 @@ const bookSchema = new mongoose.Schema(
             default: "available",
         },
 
-        role: {
-            type: String,
-            enum: ["student", "admin"],
-            default: "student",
-        },
-
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

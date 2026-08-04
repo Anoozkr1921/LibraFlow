@@ -6,6 +6,7 @@ const {
     getAllBooksService,
     getBookByIdService,
     updateBookService,
+    deleteBookService,
 } = require("../services/bookService");
 
 const getBookById = asyncHandler(async (req, res) => {
@@ -71,9 +72,26 @@ const updateBook = asyncHandler(async (req, res) => {
 
 });
 
+const deleteBook = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+
+    await deleteBookService(id);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Book deleted successfully.",
+            null
+        )
+    );
+
+});
+
 module.exports = {
     addBook,
     getAllBooks,
     getBookById,
     updateBook,
+    deleteBook,
 };

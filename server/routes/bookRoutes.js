@@ -13,7 +13,8 @@ const {
     addBook,
     getAllBooks,
     getBookById,
-    updateBook
+    updateBook,
+    deleteBook,
 } = require("../controllers/bookController");
 
 router.get(
@@ -39,6 +40,13 @@ router.put(
     "/:id",
     verifyJWT,
     updateBook
+);
+
+router.delete(
+    "/:id",
+    verifyJWT,
+    isAdmin,
+    deleteBook
 );
 
 module.exports = router;
