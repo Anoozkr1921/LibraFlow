@@ -13,6 +13,7 @@ const {
     addBook,
     getAllBooks,
     getBookById,
+    updateBook
 } = require("../controllers/bookController");
 
 router.get(

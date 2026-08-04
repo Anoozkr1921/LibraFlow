@@ -1,5 +1,6 @@
 const Book = require("../models/Book");
 const ApiError = require("../utils/ApiError");
+const mongoose = require("mongoose");
 
 const getBookByIdService = async (id) => {
 
