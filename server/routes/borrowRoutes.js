@@ -11,6 +11,7 @@ const {
 
 const {
     borrowBook,
+    returnBook,
 } = require("../controllers/borrowController");
 
 router.post(
@@ -19,6 +20,12 @@ router.post(
     borrowBookValidator,
     validate,
     borrowBook
+);
+
+router.post(
+    "/return/:borrowId",
+    verifyJWT,
+    returnBook
 );
 
 module.exports = router;

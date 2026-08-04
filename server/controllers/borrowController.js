@@ -3,6 +3,7 @@ const ApiResponse = require("../utils/ApiResponse");
 
 const {
     borrowBookService,
+    returnBookService,
 } = require("../services/borrowService");
 
 const borrowBook = asyncHandler(async (req, res) => {
@@ -24,6 +25,23 @@ const borrowBook = asyncHandler(async (req, res) => {
 
 });
 
+const returnBook = asyncHandler(async (req, res) => {
+
+    const { borrowId } = req.params;
+
+    const borrow = await returnBookService(borrowId);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Book returned successfully.",
+            borrow
+        )
+    );
+
+});
+
 module.exports = {
     borrowBook,
+    returnBook,
 };
