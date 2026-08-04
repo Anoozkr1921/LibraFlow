@@ -4,7 +4,24 @@ const ApiResponse = require("../utils/ApiResponse");
 const {
     addBookService,
     getAllBooksService,
+    getBookByIdService,
 } = require("../services/bookService");
+
+const getBookById = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+
+    const book = await getBookByIdService(id);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Book fetched successfully.",
+            book
+        )
+    );
+
+});
 
 const addBook = asyncHandler(async (req, res) => {
 
@@ -40,4 +57,5 @@ const getAllBooks = asyncHandler(async (req, res) => {
 module.exports = {
     addBook,
     getAllBooks,
+    getBookById,
 };

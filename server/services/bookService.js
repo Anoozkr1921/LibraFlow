@@ -1,6 +1,18 @@
 const Book = require("../models/Book");
 const ApiError = require("../utils/ApiError");
 
+const getBookByIdService = async (id) => {
+
+    const book = await Book.findById(id)
+        .populate("createdBy", "name email");
+
+    if (!book) {
+        throw new ApiError(404, "Book not found.");
+    }
+
+    return book;
+};
+
 const addBookService = async (bookData, adminId) => {
     const existingBook = await Book.findOne({
         isbn: bookData.isbn,
@@ -28,6 +40,7 @@ const getAllBooksService = async () => {
 };
 
 module.exports = {
+    getBookByIdService,
     addBookService,
     getAllBooksService,
 };

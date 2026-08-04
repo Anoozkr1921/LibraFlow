@@ -12,11 +12,17 @@ const {
 const {
     addBook,
     getAllBooks,
+    getBookById,
 } = require("../controllers/bookController");
 
 router.get(
     "/",
     getAllBooks
+);
+
+router.get(
+    "/:id",
+    getBookById
 );
 
 router.post(
