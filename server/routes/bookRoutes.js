@@ -1,0 +1,31 @@
+const express = require("express");
+const router = express.Router();
+
+const verifyJWT = require("../middleware/authMiddleware");
+const isAdmin = require("../middleware/adminMiddleware");
+const validate = require("../middleware/validate");
+
+const {
+    addBookValidator,
+} = require("../validators/bookValidator");
+
+const {
+    addBook,
+    getAllBooks,
+} = require("../controllers/bookController");
+
+router.get(
+    "/",
+    getAllBooks
+);
+
+router.post(
+    "/",
+    verifyJWT,
+    isAdmin,
+    addBookValidator,
+    validate,
+    addBook
+);
+
+module.exports = router;
