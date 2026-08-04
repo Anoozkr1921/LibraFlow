@@ -34,4 +34,10 @@ router.post(
     addBook
 );
 
+router.put(
+    "/:id",
+    verifyJWT,
+    updateBook
+);
+
 module.exports = router;

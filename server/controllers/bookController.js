@@ -5,6 +5,7 @@ const {
     addBookService,
     getAllBooksService,
     getBookByIdService,
+    updateBookService,
 } = require("../services/bookService");
 
 const getBookById = asyncHandler(async (req, res) => {
@@ -54,8 +55,25 @@ const getAllBooks = asyncHandler(async (req, res) => {
 
 });
 
+const updateBook = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+
+    const updatedBook = await updateBookService(id, req.body);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Book updated successfully.",
+            updatedBook
+        )
+    );
+
+});
+
 module.exports = {
     addBook,
     getAllBooks,
     getBookById,
+    updateBook,
 };
