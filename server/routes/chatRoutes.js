@@ -6,9 +6,6 @@ const {
 
 const router = express.Router();
 
-router.post(
-    "/",
-    chatController
-);
+router.post("/", chatController);
 
 module.exports = router;
