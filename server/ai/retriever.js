@@ -1,7 +1,7 @@
 const Book = require("../models/Book");
 
 const retrieveBooks = async (question) => {
-    // Convert question to lowercase
+
     const searchText = question
         .toLowerCase()
         .trim();
@@ -14,24 +14,31 @@ const retrieveBooks = async (question) => {
         .split(/\s+/)
         .filter((word) => word.length > 2);
 
-
     const regexPatterns = words.map(
         (word) => new RegExp(word, "i")
     );
 
     const books = await Book.find({
-        isDeleted: false,
-
-        $or: regexPatterns.flatMap((regex) => [
-            { title: regex },
-            { author: regex },
-            { category: regex },
-            { description: regex },
-            { publisher: regex },
-        ]),
+        $and: [
+            {
+                $or: [
+                    { isDeleted: false },
+                    { isDeleted: { $exists: false } },
+                ],
+            },
+            {
+                $or: regexPatterns.flatMap((regex) => [
+                    { title: regex },
+                    { author: regex },
+                    { category: regex },
+                    { description: regex },
+                    { publisher: regex },
+                ]),
+            },
+        ],
     })
         .select(
-            "title author category description publisher publishedYear language availableCopies location"
+            "title author isbn category description publisher publishedYear language availableCopies location"
         )
         .limit(5);
 

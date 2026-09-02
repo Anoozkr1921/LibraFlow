@@ -143,7 +143,10 @@ const getAllBooksService = async (queryParams) => {
     // --------------------------------------------------
 
     const query = {
-        isDeleted: false,
+        $or: [
+            { isDeleted: false },
+            { isDeleted: { $exists: false } },
+        ],
     };
 
 
