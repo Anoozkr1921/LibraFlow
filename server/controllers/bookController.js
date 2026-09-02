@@ -7,6 +7,7 @@ const {
     getBookByIdService,
     updateBookService,
     deleteBookService,
+    restoreBookService,
 } = require("../services/bookService");
 
 const getBookById = asyncHandler(async (req, res) => {
@@ -26,12 +27,11 @@ const getBookById = asyncHandler(async (req, res) => {
 });
 
 const addBook = asyncHandler(async (req, res) => {
-
     const book = await addBookService(
         req.body,
-        req.user._id
+        req.user._id,
+        req.file
     );
-
     return res.status(201).json(
         new ApiResponse(
             201,
@@ -39,13 +39,12 @@ const addBook = asyncHandler(async (req, res) => {
             book
         )
     );
-
 });
 
 const getAllBooks = asyncHandler(async (req, res) => {
-
-    const books = await getAllBooksService();
-
+    const books = await getAllBooksService(
+        req.query
+    );
     return res.status(200).json(
         new ApiResponse(
             200,
@@ -53,14 +52,13 @@ const getAllBooks = asyncHandler(async (req, res) => {
             books
         )
     );
-
 });
 
 const updateBook = asyncHandler(async (req, res) => {
 
     const { id } = req.params;
 
-    const updatedBook = await updateBookService(id, req.body);
+    const updatedBook = await updateBookService(id, req.body , req.file);
 
     return res.status(200).json(
         new ApiResponse(
@@ -81,8 +79,23 @@ const deleteBook = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(
             200,
-            "Book deleted successfully.",
-            null
+            "Book deleted successfully."
+        )
+    );
+
+});
+
+const restoreBook = asyncHandler(async (req, res) => {
+
+    const { id } = req.params;
+
+    const book = await restoreBookService(id);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Book restored successfully.",
+            book
         )
     );
 
@@ -94,4 +107,5 @@ module.exports = {
     getBookById,
     updateBook,
     deleteBook,
+    restoreBook,
 };

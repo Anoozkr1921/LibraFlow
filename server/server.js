@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("./cron/reminderCron");
 
 const mongoose = require("mongoose");
 const app = require("./app");

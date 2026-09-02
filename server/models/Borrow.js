@@ -39,6 +39,14 @@ const borrowSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
+        reminderSent: {
+            type: Boolean,
+            default: false,
+        },
+        overdueReminderSent: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

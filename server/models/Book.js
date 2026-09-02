@@ -61,6 +61,11 @@ const bookSchema = new mongoose.Schema(
             default: "",
         },
 
+        coverImagePublicId: {
+            type: String,
+            default: "",
+        },
+
         location: {
             type: String,
             default: "",
@@ -75,6 +80,10 @@ const bookSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
+        },
+        isDeleted: {
+            type: Boolean,
+            default: false,
         },
     },
     {

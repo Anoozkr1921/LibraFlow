@@ -15,7 +15,10 @@ const {
     getBookById,
     updateBook,
     deleteBook,
+    restoreBook,
 } = require("../controllers/bookController");
+
+const upload = require("../middleware/uploadMiddleware");
 
 router.get(
     "/",
@@ -31,6 +34,7 @@ router.post(
     "/",
     verifyJWT,
     isAdmin,
+    upload.single("coverImage"),
     addBookValidator,
     validate,
     addBook
@@ -39,6 +43,8 @@ router.post(
 router.put(
     "/:id",
     verifyJWT,
+    isAdmin,
+    upload.single("coverImage"),
     updateBook
 );
 
@@ -47,6 +53,13 @@ router.delete(
     verifyJWT,
     isAdmin,
     deleteBook
+);
+
+router.patch(
+    "/:id/restore",
+    verifyJWT,
+    isAdmin,
+    restoreBook
 );
 
 module.exports = router;

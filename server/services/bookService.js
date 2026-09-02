@@ -2,80 +2,553 @@ const Book = require("../models/Book");
 const ApiError = require("../utils/ApiError");
 const mongoose = require("mongoose");
 
+const cloudinary = require("../config/cloudinary");
+
+
+// ======================================================
+// GET BOOK BY ID
+// ======================================================
+
 const getBookByIdService = async (id) => {
 
-    const book = await Book.findById(id)
+    // Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new ApiError(
+            400,
+            "Invalid book ID."
+        );
+    }
+
+    const book = await Book.findById(id , { isDeleted: false })
         .populate("createdBy", "name email");
 
     if (!book) {
-        throw new ApiError(404, "Book not found.");
+        throw new ApiError(
+            404,
+            "Book not found."
+        );
     }
 
     return book;
 };
 
-const addBookService = async (bookData, adminId) => {
+
+// ======================================================
+// ADD BOOK
+// ======================================================
+
+const addBookService = async (data, adminId, file) => {
+
+    const {
+        title,
+        author,
+        isbn,
+        description,
+        category,
+        publisher,
+        publishedYear,
+        language,
+        totalCopies,
+        location,
+    } = data;
+
+
+    // --------------------------------------------------
+    // Check duplicate ISBN
+    // --------------------------------------------------
+
     const existingBook = await Book.findOne({
-        isbn: bookData.isbn,
+        isbn,
+        isDeleted: false,
     });
 
     if (existingBook) {
-        throw new ApiError(400, "Book with this ISBN already exists.");
+        throw new ApiError(
+            409,
+            "A book with this ISBN already exists."
+        );
     }
 
-    const book = await Book.create({
-        ...bookData,
-        availableCopies: bookData.totalCopies,
+
+    // --------------------------------------------------
+    // Prepare book data
+    // --------------------------------------------------
+
+    const bookData = {
+
+        title,
+        author,
+        isbn,
+        description,
+        category,
+        publisher,
+        publishedYear,
+        language,
+
+        totalCopies,
+
+        // Initially all copies are available
+        availableCopies: totalCopies,
+
+        location,
+
         createdBy: adminId,
-    });
+    };
+
+
+    // --------------------------------------------------
+    // Save Cloudinary image information
+    // --------------------------------------------------
+
+    if (file) {
+
+        // URL of uploaded image
+        bookData.coverImage = file.path;
+
+        // Cloudinary public ID
+        bookData.coverImagePublicId =
+            file.filename;
+    }
+
+
+    // --------------------------------------------------
+    // Create book
+    // --------------------------------------------------
+
+    const book = await Book.create(bookData);
 
     return book;
 };
 
-const getAllBooksService = async () => {
-    const books = await Book.find()
-        .populate("createdBy", "name email")
-        .sort({ createdAt: -1 });
 
-    return books;
-};
+// ======================================================
+// GET ALL BOOKS
+// SEARCH + FILTER + PAGINATION
+// ======================================================
 
-const updateBookService = async (id, data) => {
+const getAllBooksService = async (queryParams) => {
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new ApiError(400, "Invalid book ID.");
+    const {
+        search,
+        category,
+        available,
+        page = 1,
+        limit = 10,
+        sort = "newest",
+    } = queryParams;
+
+
+    // --------------------------------------------------
+    // MongoDB query
+    // --------------------------------------------------
+
+    const query = {
+        isDeleted: false,
+    };
+
+
+    // --------------------------------------------------
+    // Search
+    // --------------------------------------------------
+
+    if (
+        search &&
+        search.trim() !== ""
+    ) {
+
+        query.$or = [
+
+            {
+                title: {
+                    $regex: search,
+                    $options: "i",
+                },
+            },
+
+            {
+                author: {
+                    $regex: search,
+                    $options: "i",
+                },
+            },
+
+            {
+                isbn: {
+                    $regex: search,
+                    $options: "i",
+                },
+            },
+
+        ];
     }
 
-    const book = await Book.findByIdAndUpdate(
-        id,
-        data,
-        {
-            new: true,
-            runValidators: true,
-        }
+
+    // --------------------------------------------------
+    // Category filter
+    // --------------------------------------------------
+
+    if (
+        category &&
+        category.trim() !== ""
+    ) {
+
+        query.category = {
+            $regex: `^${category}$`,
+            $options: "i",
+        };
+    }
+
+
+    // --------------------------------------------------
+    // Availability filter
+    // --------------------------------------------------
+
+    if (available === "true") {
+
+        query.availableCopies = {
+            $gt: 0,
+        };
+
+    } else if (available === "false") {
+
+        query.availableCopies = 0;
+    }
+
+
+    // --------------------------------------------------
+    // Pagination
+    // --------------------------------------------------
+
+    const pageNumber = Math.max(
+        Number(page) || 1,
+        1
     );
 
-    if (!book) {
-        throw new ApiError(404, "Book not found.");
+    const limitNumber = Math.min(
+        Math.max(Number(limit) || 10, 1),
+        100
+    );
+
+    const skip =
+        (pageNumber - 1) * limitNumber;
+
+
+    // --------------------------------------------------
+    // Sorting
+    // --------------------------------------------------
+
+    let sortOption = {
+        createdAt: -1,
+    };
+
+    if (sort === "oldest") {
+
+        sortOption = {
+            createdAt: 1,
+        };
+
+    } else if (sort === "title") {
+
+        sortOption = {
+            title: 1,
+        };
+
+    } else if (sort === "author") {
+
+        sortOption = {
+            author: 1,
+        };
     }
+
+
+    // --------------------------------------------------
+    // Get books
+    // --------------------------------------------------
+
+    const books = await Book.find(query)
+        .populate(
+            "createdBy",
+            "name email"
+        )
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limitNumber);
+
+
+    // --------------------------------------------------
+    // Total books
+    // --------------------------------------------------
+
+    const totalBooks =
+        await Book.countDocuments(query);
+
+
+    // --------------------------------------------------
+    // Total pages
+    // --------------------------------------------------
+
+    const totalPages = Math.ceil(
+        totalBooks / limitNumber
+    );
+
+
+    // --------------------------------------------------
+    // Return
+    // --------------------------------------------------
+
+    return {
+
+        books,
+
+        pagination: {
+
+            page: pageNumber,
+
+            limit: limitNumber,
+
+            totalBooks,
+
+            totalPages,
+
+            hasNextPage:
+                pageNumber < totalPages,
+
+            hasPreviousPage:
+                pageNumber > 1,
+        },
+    };
+};
+
+
+// ======================================================
+// UPDATE BOOK
+// ======================================================
+
+const updateBookService = async (
+    id,
+    data,
+    file
+) => {
+
+    // --------------------------------------------------
+    // Validate ID
+    // --------------------------------------------------
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+
+        throw new ApiError(
+            400,
+            "Invalid book ID."
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Find existing book
+    // --------------------------------------------------
+
+    const book = await Book.findById(id);
+
+    if (!book) {
+
+        throw new ApiError(
+            404,
+            "Book not found."
+        );
+    }
+
+
+    // --------------------------------------------------
+    // If a new image was uploaded
+    // --------------------------------------------------
+
+    if (file) {
+
+        // Delete old image from Cloudinary
+        if (book.coverImagePublicId) {
+
+            try {
+
+                await cloudinary.uploader.destroy(
+                    book.coverImagePublicId
+                );
+
+            } catch (error) {
+
+                console.log(
+                    "Failed to delete old Cloudinary image:",
+                    error.message
+                );
+            }
+        }
+
+
+        // Save new image
+        book.coverImage = file.path;
+
+        book.coverImagePublicId =
+            file.filename;
+    }
+
+
+    // --------------------------------------------------
+    // Update normal fields
+    // --------------------------------------------------
+
+    const allowedFields = [
+        "title",
+        "author",
+        "isbn",
+        "description",
+        "category",
+        "publisher",
+        "publishedYear",
+        "language",
+        "totalCopies",
+        "location",
+    ];
+
+
+    for (const field of allowedFields) {
+
+        if (
+            data[field] !== undefined
+        ) {
+
+            book[field] = data[field];
+        }
+    }
+
+
+    // --------------------------------------------------
+    // Handle total copies
+    // --------------------------------------------------
+
+    if (
+        data.totalCopies !== undefined
+    ) {
+
+        const newTotalCopies =
+            Number(data.totalCopies);
+
+        const borrowedCopies =
+            book.totalCopies -
+            book.availableCopies;
+
+        if (
+            newTotalCopies <
+            borrowedCopies
+        ) {
+
+            throw new ApiError(
+                400,
+                "Total copies cannot be less than currently borrowed copies."
+            );
+        }
+
+        book.totalCopies =
+            newTotalCopies;
+
+        book.availableCopies =
+            newTotalCopies -
+            borrowedCopies;
+    }
+
+
+    // --------------------------------------------------
+    // Update availability status
+    // --------------------------------------------------
+
+    book.status =
+        book.availableCopies > 0
+            ? "available"
+            : "unavailable";
+
+
+    // --------------------------------------------------
+    // Save
+    // --------------------------------------------------
+
+    await book.save();
 
     return book;
 };
+
+
+// ======================================================
+// DELETE BOOK
+// ======================================================
 
 const deleteBookService = async (id) => {
 
+    // --------------------------------------------------
+    // Validate ID
+    // --------------------------------------------------
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new ApiError(400, "Invalid book ID.");
+
+        throw new ApiError(
+            400,
+            "Invalid book ID."
+        );
     }
 
-    const book = await Book.findByIdAndDelete(id);
+
+    // --------------------------------------------------
+    // Find book
+    // --------------------------------------------------
+
+    const book = await Book.findById(id);
 
     if (!book) {
-        throw new ApiError(404, "Book not found.");
+
+        throw new ApiError(
+            404,
+            "Book not found."
+        );
     }
 
-    return book;
+
+    // --------------------------------------------------
+    // Delete Cloudinary image
+    // --------------------------------------------------
+
+    if (book.coverImagePublicId) {
+
+        try {
+
+            await cloudinary.uploader.destroy(
+                book.coverImagePublicId
+            );
+
+        } catch (error) {
+
+            console.log(
+                "Failed to delete Cloudinary image:",
+                error.message
+            );
+        }
+    }
+
+
+    // --------------------------------------------------
+    // Soft delete
+    // --------------------------------------------------
+
+    book.isDeleted = true;
+
+    await book.save();
+
+
+    return {
+        message: "Book deleted successfully.",
+    };
 };
+
+
+// ======================================================
+// EXPORT
+// ======================================================
 
 module.exports = {
     getBookByIdService,
