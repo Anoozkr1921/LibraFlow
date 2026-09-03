@@ -2,6 +2,12 @@ const Book = require("../models/Book");
 const ApiError = require("../utils/ApiError");
 const mongoose = require("mongoose");
 
+const embeddings = require("../ai/embeddingModel");
+
+const {
+    createBookText,
+} = require("../ai/bookText");
+
 const cloudinary = require("../config/cloudinary");
 
 
@@ -32,13 +38,11 @@ const getBookByIdService = async (id) => {
     return book;
 };
 
-
 // ======================================================
 // ADD BOOK
 // ======================================================
 
 const addBookService = async (data, adminId, file) => {
-
     const {
         title,
         author,
@@ -51,8 +55,6 @@ const addBookService = async (data, adminId, file) => {
         totalCopies,
         location,
     } = data;
-
-
     // --------------------------------------------------
     // Check duplicate ISBN
     // --------------------------------------------------
@@ -61,21 +63,16 @@ const addBookService = async (data, adminId, file) => {
         isbn,
         isDeleted: false,
     });
-
     if (existingBook) {
         throw new ApiError(
             409,
             "A book with this ISBN already exists."
         );
     }
-
-
     // --------------------------------------------------
     // Prepare book data
     // --------------------------------------------------
-
     const bookData = {
-
         title,
         author,
         isbn,
@@ -84,42 +81,42 @@ const addBookService = async (data, adminId, file) => {
         publisher,
         publishedYear,
         language,
-
         totalCopies,
-
-        // Initially all copies are available
         availableCopies: totalCopies,
-
         location,
-
         createdBy: adminId,
     };
-
-
     // --------------------------------------------------
     // Save Cloudinary image information
     // --------------------------------------------------
-
     if (file) {
-
-        // URL of uploaded image
         bookData.coverImage = file.path;
-
-        // Cloudinary public ID
         bookData.coverImagePublicId =
             file.filename;
     }
 
+    // --------------------------------------------------
+    // Generate embedding text
+    // --------------------------------------------------
+    const bookText = createBookText(bookData);
+    // --------------------------------------------------
+    // Generate embedding
+    // --------------------------------------------------
+    const vector =
+        await embeddings.embedQuery(bookText);
 
     // --------------------------------------------------
-    // Create book
+    // Add embedding to book
     // --------------------------------------------------
-
+    bookData.embedding = vector;
+    // --------------------------------------------------
+    // Save book
+    // --------------------------------------------------
     const book = await Book.create(bookData);
+
 
     return book;
 };
-
 
 // ======================================================
 // GET ALL BOOKS

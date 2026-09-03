@@ -12,13 +12,37 @@ const {
 const chatWithLibrary = async (question) => {
 
     // ---------------------------------------
-    // STEP 1: Retrieve relevant books
+    // STEP 1: Detect availability request
     // ---------------------------------------
 
-    const books = await retrieveBooksByVector(question);
+    const availabilityKeywords = [
+        "available",
+        "availability",
+        "borrow",
+        "borrowable",
+        "can i borrow",
+    ];
+
+    const lowerQuestion = question.toLowerCase();
+
+    const availableOnly = availabilityKeywords.some(
+        (keyword) =>
+            lowerQuestion.includes(keyword)
+    );
+
 
     // ---------------------------------------
-    // STEP 2: Create context
+    // STEP 2: Retrieve relevant books
+    // ---------------------------------------
+
+    const books = await retrieveBooksByVector(
+        question,
+        availableOnly
+    );
+
+
+    // ---------------------------------------
+    // STEP 3: Create context
     // ---------------------------------------
 
     let context = "";
@@ -53,7 +77,7 @@ Location: ${book.location || "Not available"}
 
 
     // ---------------------------------------
-    // STEP 3: Create prompt
+    // STEP 4: Create prompt
     // ---------------------------------------
 
     const prompt = createLibraryPrompt(
@@ -63,7 +87,7 @@ Location: ${book.location || "Not available"}
 
 
     // ---------------------------------------
-    // STEP 4: Ask Gemini
+    // STEP 5: Ask Gemini
     // ---------------------------------------
 
     const response = await chatModel.invoke(
@@ -72,7 +96,7 @@ Location: ${book.location || "Not available"}
 
 
     // ---------------------------------------
-    // STEP 5: Return answer + sources
+    // STEP 6: Return answer + sources
     // ---------------------------------------
 
     return {
@@ -84,6 +108,9 @@ Location: ${book.location || "Not available"}
             title: book.title,
             author: book.author,
             category: book.category,
+            availableCopies: book.availableCopies,
+            location: book.location,
+            score: book.score,
         })),
 
     };

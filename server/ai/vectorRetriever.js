@@ -2,28 +2,36 @@ const Book = require("../models/Book");
 
 const embeddings = require("./embeddingModel");
 
-const retrieveBooksByVector = async (question) => {
+const retrieveBooksByVector = async (question, availableOnly = false) => {
 
-    // 1. Convert user question into embedding
-    const queryVector = await embeddings.embedQuery(
-        question
-    );
+    const queryVector = await embeddings.embedQuery(question);
 
-    // 2. Perform MongoDB Vector Search
+    const vectorSearch = {
+        index: "book_vector_index",
+        path: "embedding",
+        queryVector,
+        numCandidates: 50,
+        limit: 5,
+    };
+
+    if (availableOnly) {
+        vectorSearch.filter = {
+            isDeleted: false,
+            availableCopies: {
+                $gt: 0,
+            },
+        };
+    } else {
+        vectorSearch.filter = {
+            isDeleted: false,
+        };
+    }
+
     const books = await Book.aggregate([
         {
-            $vectorSearch: {
-                index: "book_vector_index",
-                path: "embedding",
-                queryVector: queryVector,
-                numCandidates: 50,
-                limit: 5,
-                filter: {
-                    isDeleted: false,
-                },
-            },
+            $vectorSearch: vectorSearch,
         },
-        // 3. Return similarity score
+
         {
             $project: {
                 title: 1,
@@ -36,13 +44,23 @@ const retrieveBooksByVector = async (question) => {
                 language: 1,
                 availableCopies: 1,
                 location: 1,
+
                 score: {
                     $meta: "vectorSearchScore",
                 },
             },
         },
     ]);
-    return books;
+
+    const relevantBooks = books.filter(
+        (book) => book.score >= 0.80
+    );
+
+    return relevantBooks;
+};
+
+module.exports = {
+    retrieveBooksByVector,
 };
 module.exports = {
     retrieveBooksByVector,
