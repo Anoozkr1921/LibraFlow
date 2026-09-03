@@ -24,6 +24,10 @@ const {
     searchBooks,
 } = require("../ai/structuredRetriever");
 
+const {
+    resolveBookEntity,
+} = require("../ai/bookEntityResolver");
+
 
 const chatWithLibrary = async (question) => {
 
@@ -47,17 +51,20 @@ const chatWithLibrary = async (question) => {
     );
 
     const queryType = detectQueryType(question);
+    const resolvedBook = await resolveBookEntity(question);
 
     let books;
 
-    if (queryType === "inventory") {
+    if (resolvedBook) {
+        books = [resolvedBook];
+    }
 
+    else if (queryType === "inventory") {
         books = await retrieveAllBooks();
 
     }
 
     else if (queryType === "availability") {
-
         books = await retrieveBooksByVector(
             question,
             true
@@ -66,7 +73,6 @@ const chatWithLibrary = async (question) => {
     }
 
     else if (queryType === "structured") {
-
         const filters =
             parseStructuredQuery(question);
 
