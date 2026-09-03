@@ -4,29 +4,68 @@ const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 
 const verifyJWT = asyncHandler(async (req, res, next) => {
+
     let token;
 
-    // Read token from cookie
-    if (req.cookies?.token) {
+    // ---------------------------------------
+    // Get token from Authorization header
+    // ---------------------------------------
+
+    if (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith("Bearer ")
+    ) {
+        token =
+            req.headers.authorization.split(" ")[1];
+    }
+
+    // ---------------------------------------
+    // Fallback: get token from cookie
+    // ---------------------------------------
+
+    if (!token && req.cookies?.token) {
         token = req.cookies.token;
     }
 
-    // Or from Authorization header
-    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
-        token = req.headers.authorization.split(" ")[1];
-    }
+    // ---------------------------------------
+    // Token missing
+    // ---------------------------------------
 
     if (!token) {
-        throw new ApiError(401, "Unauthorized. Please login.");
+        throw new ApiError(
+            401,
+            "Unauthorized. Please login."
+        );
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // ---------------------------------------
+    // Verify JWT
+    // ---------------------------------------
 
-    const user = await User.findById(decoded.id).select("-password");
+    const decoded =
+        jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
+    // ---------------------------------------
+    // Find user
+    // ---------------------------------------
+
+    const user =
+        await User.findById(decoded.id)
+            .select("-password");
 
     if (!user) {
-        throw new ApiError(401, "User not found.");
+        throw new ApiError(
+            401,
+            "User not found."
+        );
     }
+
+    // ---------------------------------------
+    // Attach user to request
+    // ---------------------------------------
 
     req.user = user;
 

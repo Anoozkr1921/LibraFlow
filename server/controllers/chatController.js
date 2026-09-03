@@ -11,6 +11,25 @@ const chatController = async (
 
     try {
 
+        // ---------------------------------------
+        // Check authentication
+        // ---------------------------------------
+
+        if (!req.user || !req.user._id) {
+
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Unauthorized. Please login again.",
+            });
+
+        }
+
+
+        // ---------------------------------------
+        // Get request data
+        // ---------------------------------------
+
         const {
             question,
             conversationId,
@@ -28,14 +47,15 @@ const chatController = async (
 
             return res.status(400).json({
                 success: false,
-                message: "Question is required.",
+                message:
+                    "Question is required.",
             });
 
         }
 
 
         // ---------------------------------------
-        // Validate conversationId
+        // Validate conversation ID
         // ---------------------------------------
 
         if (!conversationId) {
@@ -50,14 +70,15 @@ const chatController = async (
 
 
         // ---------------------------------------
-        // Get logged-in user
+        // Get authenticated user ID
         // ---------------------------------------
 
-        const userId = req.user._id;
+        const userId =
+            req.user._id;
 
 
         // ---------------------------------------
-        // Chat with library
+        // Chat service
         // ---------------------------------------
 
         const result =
@@ -69,12 +90,15 @@ const chatController = async (
 
 
         // ---------------------------------------
-        // Send response
+        // Response
         // ---------------------------------------
 
         return res.status(200).json({
+
             success: true,
+
             data: result,
+
         });
 
     } catch (error) {

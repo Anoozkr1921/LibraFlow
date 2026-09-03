@@ -67,13 +67,9 @@ const addMessage = async (
     sources = []
 ) => {
 
-    if (
-        !conversationId ||
-        !userId
-    ) {
+    if (!conversationId || !userId) {
         return;
     }
-
 
     // ---------------------------------------
     // Find user's conversation
@@ -119,7 +115,7 @@ const addMessage = async (
 
     if (
         role === "assistant" &&
-        sources &&
+        Array.isArray(sources) &&
         sources.length > 0
     ) {
 
@@ -129,7 +125,7 @@ const addMessage = async (
 
 
     // ---------------------------------------
-    // Save
+    // Save conversation
     // ---------------------------------------
 
     await conversation.save();
@@ -154,7 +150,6 @@ const setLastReferencedBook = async (
         return;
     }
 
-
     await Conversation.findOneAndUpdate(
         {
             conversationId,
@@ -163,7 +158,16 @@ const setLastReferencedBook = async (
 
         {
             $set: {
-                lastReferencedBook: book,
+                lastReferencedBook: {
+                    id: book.id || book._id,
+                    title: book.title,
+                    author: book.author,
+                    category: book.category,
+                    availableCopies:
+                        book.availableCopies,
+                    location: book.location,
+                    score: book.score,
+                },
             },
         },
 
