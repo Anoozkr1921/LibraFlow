@@ -90,6 +90,11 @@ const chatWithLibrary = async (
             title: referencedBook.title,
         });
 
+        // Fallback if structured title search
+        // doesn't find the book
+        if (books.length === 0) {
+            books = [referencedBook];
+        }
     }
 
 

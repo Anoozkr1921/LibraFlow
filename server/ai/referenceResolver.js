@@ -15,19 +15,19 @@ const resolveBookReference = async (
     }
 
     const lowerQuestion =
-        question.toLowerCase();
+        question.toLowerCase().trim();
 
 
     // ---------------------------------------
-    // Find previous assistant response
-    // containing sources
+    // Get previous assistant messages
+    // that contain sources
     // ---------------------------------------
 
     const previousAssistantMessages =
         (history || []).filter(
             (message) =>
                 message.role === "assistant" &&
-                message.sources &&
+                Array.isArray(message.sources) &&
                 message.sources.length > 0
         );
 
@@ -44,6 +44,9 @@ const resolveBookReference = async (
         previous?.sources || [];
 
 
+    let selectedBook = null;
+
+
     // ---------------------------------------
     // FIRST BOOK
     // ---------------------------------------
@@ -53,18 +56,8 @@ const resolveBookReference = async (
         lowerQuestion.includes("first book")
     ) {
 
-        const book = sources[0] || null;
-
-        if (book && conversationId) {
-
-            await setLastReferencedBook(
-                conversationId,
-                book
-            );
-
-        }
-
-        return book;
+        selectedBook =
+            sources[0] || null;
     }
 
 
@@ -72,23 +65,13 @@ const resolveBookReference = async (
     // SECOND BOOK
     // ---------------------------------------
 
-    if (
+    else if (
         lowerQuestion.includes("second one") ||
         lowerQuestion.includes("second book")
     ) {
 
-        const book = sources[1] || null;
-
-        if (book && conversationId) {
-
-            await setLastReferencedBook(
-                conversationId,
-                book
-            );
-
-        }
-
-        return book;
+        selectedBook =
+            sources[1] || null;
     }
 
 
@@ -96,23 +79,13 @@ const resolveBookReference = async (
     // THIRD BOOK
     // ---------------------------------------
 
-    if (
+    else if (
         lowerQuestion.includes("third one") ||
         lowerQuestion.includes("third book")
     ) {
 
-        const book = sources[2] || null;
-
-        if (book && conversationId) {
-
-            await setLastReferencedBook(
-                conversationId,
-                book
-            );
-
-        }
-
-        return book;
+        selectedBook =
+            sources[2] || null;
     }
 
 
@@ -120,66 +93,82 @@ const resolveBookReference = async (
     // LAST BOOK
     // ---------------------------------------
 
-    if (
+    else if (
         lowerQuestion.includes("last one") ||
         lowerQuestion.includes("last book")
     ) {
 
-        const book =
-            sources.length > 0
-                ? sources[sources.length - 1]
-                : null;
+        if (sources.length > 0) {
 
-        if (book && conversationId) {
-
-            await setLastReferencedBook(
-                conversationId,
-                book
-            );
-
+            selectedBook =
+                sources[sources.length - 1];
         }
-
-        return book;
     }
 
 
     // ---------------------------------------
-    // "IT" / "ITS" / "THAT BOOK"
+    // Explicit reference:
+    // "that book", "this book"
     // ---------------------------------------
 
-    if (
-        lowerQuestion.includes("its ") ||
-        lowerQuestion.includes("it ") ||
+    else if (
         lowerQuestion.includes("that book") ||
         lowerQuestion.includes("this book") ||
         lowerQuestion.includes("that one") ||
         lowerQuestion.includes("this one")
     ) {
 
-        if (conversationId) {
+        selectedBook =
+            await getLastReferencedBook(
+                conversationId
+            );
 
-            const lastReferencedBook =
-                await getLastReferencedBook(
-                    conversationId
-                );
-
-            if (lastReferencedBook) {
-
-                return lastReferencedBook;
-
-            }
+        if (!selectedBook) {
+            selectedBook =
+                sources[0] || null;
         }
-
-
-        // ---------------------------------------
-        // Fallback
-        // ---------------------------------------
-
-        return sources[0] || null;
     }
 
 
-    return null;
+    // ---------------------------------------
+    // Pronoun reference:
+    // "it", "its"
+    // ---------------------------------------
+
+    else if (
+        lowerQuestion.includes("it ") ||
+        lowerQuestion.includes("its ")
+    ) {
+
+        selectedBook =
+            await getLastReferencedBook(
+                conversationId
+            );
+
+        if (!selectedBook) {
+            selectedBook =
+                sources[0] || null;
+        }
+    }
+
+
+    // ---------------------------------------
+    // Save newly selected book
+    // ---------------------------------------
+
+    if (
+        selectedBook &&
+        conversationId
+    ) {
+
+        await setLastReferencedBook(
+            conversationId,
+            selectedBook
+        );
+    }
+
+
+    return selectedBook;
 };
 
 
