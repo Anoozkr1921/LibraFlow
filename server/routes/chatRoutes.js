@@ -7,6 +7,6 @@ const verifyJWT = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post("/", chatController , verifyJWT);
+router.post("/" , verifyJWT, chatController );
 
 module.exports = router;
