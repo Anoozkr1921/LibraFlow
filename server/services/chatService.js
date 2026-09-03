@@ -8,6 +8,14 @@ const {
     createLibraryPrompt,
 } = require("../ai/prompts");
 
+const {
+    detectQueryType,
+} = require("../ai/queryRouter");
+
+const {
+    retrieveAllBooks,
+} = require("../ai/inventoryRetriever");
+
 
 const chatWithLibrary = async (question) => {
 
@@ -35,10 +43,28 @@ const chatWithLibrary = async (question) => {
     // STEP 2: Retrieve relevant books
     // ---------------------------------------
 
-    const books = await retrieveBooksByVector(
-        question,
-        availableOnly
-    );
+    const queryType = detectQueryType(question);
+
+    let books;
+
+    if (queryType === "inventory") {
+
+        books = await retrieveAllBooks();
+
+    } else if (queryType === "availability") {
+
+        books = await retrieveBooksByVector(
+            question,
+            true
+        );
+
+    } else {
+
+        books = await retrieveBooksByVector(
+            question,
+            false
+        );
+    }
 
 
     // ---------------------------------------
