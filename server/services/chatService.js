@@ -33,74 +33,137 @@ const {
     addMessage,
 } = require("../ai/chatMemory");
 
-const chatWithLibrary = async (question , conversationId) => {
+const {
+    resolveBookReference,
+} = require("../ai/referenceResolver");
 
-    const history = getHistory(conversationId);
+
+const chatWithLibrary = async (
+    question,
+    conversationId
+) => {
 
     // ---------------------------------------
-    // STEP 1: Detect availability request
+    // STEP 1: Get conversation history
     // ---------------------------------------
 
-    const availabilityKeywords = [
-        "available",
-        "availability",
-        "borrow",
-        "borrowable",
-        "can i borrow",
-    ];
+    const history = await getHistory(conversationId);
 
-    const lowerQuestion = question.toLowerCase();
 
-    const availableOnly = availabilityKeywords.some(
-        (keyword) =>
-            lowerQuestion.includes(keyword)
-    );
+    // ---------------------------------------
+    // STEP 2: Resolve conversational reference
+    // ---------------------------------------
 
-    const queryType = detectQueryType(question);
-    const resolvedBook = await resolveBookEntity(question);
+    const referencedBook =
+        await resolveBookReference(
+            question,
+            history
+        );
+
+
+    // ---------------------------------------
+    // STEP 3: Detect query type
+    // ---------------------------------------
+
+    const queryType =
+        detectQueryType(question);
+
+
+    // ---------------------------------------
+    // STEP 4: Resolve exact book entity
+    // ---------------------------------------
+
+    const resolvedBook =
+        await resolveBookEntity(question);
+
 
     let books;
 
-    if (resolvedBook) {
-        books = [resolvedBook];
-    }
 
-    else if (queryType === "inventory") {
-        books = await retrieveAllBooks();
+    // ---------------------------------------
+    // STEP 5: Conversational reference
+    // ---------------------------------------
 
-    }
+    if (referencedBook) {
 
-    else if (queryType === "availability") {
-        books = await retrieveBooksByVector(
-            question,
-            true
-        );
-
-    }
-
-    else if (queryType === "structured") {
-        const filters =
-            parseStructuredQuery(question);
-
-        books = await searchBooks(filters);
+        books = await searchBooks({
+            title: referencedBook.title,
+        });
 
     }
 
 
     // ---------------------------------------
-    // SEMANTIC SEARCH
+    // STEP 6: Exact book entity
+    // ---------------------------------------
+
+    else if (resolvedBook) {
+
+        books = [resolvedBook];
+
+    }
+
+
+    // ---------------------------------------
+    // STEP 7: Inventory query
+    // ---------------------------------------
+
+    else if (queryType === "inventory") {
+
+        books =
+            await retrieveAllBooks();
+
+    }
+
+
+    // ---------------------------------------
+    // STEP 8: Availability query
+    // ---------------------------------------
+
+    else if (queryType === "availability") {
+
+        books =
+            await retrieveBooksByVector(
+                question,
+                true
+            );
+
+    }
+
+
+    // ---------------------------------------
+    // STEP 9: Structured query
+    // ---------------------------------------
+
+    else if (queryType === "structured") {
+
+        const filters =
+            parseStructuredQuery(question);
+
+        books =
+            await searchBooks(filters);
+
+    }
+
+
+    // ---------------------------------------
+    // STEP 10: Semantic / Vector search
     // ---------------------------------------
 
     else {
 
-        books = await retrieveBooksByVector(
-            question,
-            false
-        );
+        books =
+            await retrieveBooksByVector(
+                question,
+                false
+            );
 
     }
 
-    // Creating context
+
+    // ---------------------------------------
+    // STEP 11: Create context
+    // ---------------------------------------
 
     let context = "";
 
@@ -135,23 +198,47 @@ Location: ${book.location || "Not available"}
 
 
     // ---------------------------------------
-    // STEP 4: Create prompt
+    // STEP 12: Create prompt
     // ---------------------------------------
 
-    const prompt = createLibraryPrompt(
-        question,
-        context,
-        history
-    );
+    const prompt =
+        createLibraryPrompt(
+            question,
+            context,
+            history
+        );
 
 
     // ---------------------------------------
-    // STEP 5: Ask Gemini
+    // STEP 13: Ask Gemini
     // ---------------------------------------
 
-    const response = await chatModel.invoke(
-        prompt
-    );
+    const response =
+        await chatModel.invoke(prompt);
+
+
+    // ---------------------------------------
+    // STEP 14: Prepare sources
+    // ---------------------------------------
+
+    const sources =
+        books.map((book) => ({
+
+            id: book._id,
+            title: book.title,
+            author: book.author,
+            category: book.category,
+            availableCopies:
+                book.availableCopies,
+            location: book.location,
+            score: book.score,
+
+        }));
+
+
+    // ---------------------------------------
+    // STEP 15: Save conversation
+    // ---------------------------------------
 
     addMessage(
         conversationId,
@@ -162,27 +249,18 @@ Location: ${book.location || "Not available"}
     addMessage(
         conversationId,
         "assistant",
-        response.content
+        response.content,
+        sources
     );
 
 
     // ---------------------------------------
-    // STEP 6: Return answer + sources
+    // STEP 16: Return response
     // ---------------------------------------
 
     return {
-
         answer: response.content,
-
-        sources: books.map((book) => ({
-            id: book._id,
-            title: book.title,
-            author: book.author,
-            category: book.category,
-            availableCopies: book.availableCopies,
-            location: book.location,
-            score: book.score,
-        })),
+        sources,
 
     };
 };
