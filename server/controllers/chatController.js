@@ -6,16 +6,37 @@ const chatController = async (req, res, next) => {
 
     try {
 
-        const { question } = req.body;
+        const {
+            question,
+            conversationId,
+        } = req.body;
+
 
         if (!question || question.trim() === "") {
+
             return res.status(400).json({
                 success: false,
                 message: "Question is required.",
             });
+
         }
 
-        const result = await chatWithLibrary(question);
+
+        if (!conversationId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "conversationId is required.",
+            });
+
+        }
+
+
+        const result = await chatWithLibrary(
+            question,
+            conversationId
+        );
+
 
         return res.status(200).json({
             success: true,
@@ -23,9 +44,12 @@ const chatController = async (req, res, next) => {
         });
 
     } catch (error) {
+
         next(error);
+
     }
 };
+
 
 module.exports = {
     chatController,

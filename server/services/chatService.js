@@ -28,8 +28,14 @@ const {
     resolveBookEntity,
 } = require("../ai/bookEntityResolver");
 
+const {
+    getHistory,
+    addMessage,
+} = require("../ai/chatMemory");
 
-const chatWithLibrary = async (question) => {
+const chatWithLibrary = async (question , conversationId) => {
+
+    const history = getHistory(conversationId);
 
     // ---------------------------------------
     // STEP 1: Detect availability request
@@ -134,7 +140,8 @@ Location: ${book.location || "Not available"}
 
     const prompt = createLibraryPrompt(
         question,
-        context
+        context,
+        history
     );
 
 
@@ -144,6 +151,18 @@ Location: ${book.location || "Not available"}
 
     const response = await chatModel.invoke(
         prompt
+    );
+
+    addMessage(
+        conversationId,
+        "user",
+        question
+    );
+
+    addMessage(
+        conversationId,
+        "assistant",
+        response.content
     );
 
 

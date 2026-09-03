@@ -1,4 +1,18 @@
-const createLibraryPrompt = (question, context) => {
+const createLibraryPrompt = (
+    question,
+    context,
+    history = []
+) => {
+
+    const conversationHistory =
+        history.length === 0
+            ? "No previous conversation."
+            : history
+                .map((message) => {
+                    return `${message.role}: ${message.content}`;
+                })
+                .join("\n");
+
 
     return `
 You are LibraFlow AI, an intelligent assistant
@@ -12,20 +26,19 @@ IMPORTANT RULES:
 1. If the requested information exists in the
    library information, answer it directly.
 
-2. Do NOT say "I don't have enough information"
-   when the answer can be found in the provided
-   information.
+2. You may use the conversation history to
+   understand references such as:
+   "the first one", "that book", "its author",
+   etc.
 
-3. Do NOT invent or assume any information.
+3. Do NOT invent library information.
 
-4. If no relevant information is provided,
-   clearly say:
-   "I don't have enough information in the library database to answer that."
+4. If the answer cannot be determined from the
+   library information and conversation history,
+   say that you don't have enough information.
 
-5. For questions about ISBN, title, author,
-   category, availability, location, publisher,
-   language, or publication year, use the exact
-   values provided in the library information.
+Conversation History:
+${conversationHistory}
 
 Library Information:
 ${context}
@@ -33,7 +46,7 @@ ${context}
 User Question:
 ${question}
 
-Give a concise and direct answer.
+Give a clear and concise answer.
 `;
 };
 
