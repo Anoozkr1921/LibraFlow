@@ -6,6 +6,7 @@ const authRoutes = require("./routes/authRoutes");
 const bookRoutes = require("./routes/bookRoutes");
 const borrowRoutes = require("./routes/borrowRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const conversationRoutes = require("./routes/conversationRoutes");
 
 const app = express();
 
@@ -21,7 +22,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/borrow", borrowRoutes);
 app.use("/api/chat", chatRoutes);
-
+app.use("/api/conversations", conversationRoutes);
 app.get("/", (req, res) => {
     res.json({
         message: "Library API Running 🚀",

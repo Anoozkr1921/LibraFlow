@@ -40,14 +40,15 @@ const {
 
 const chatWithLibrary = async (
     question,
-    conversationId
+    conversationId,
+    userId 
 ) => {
 
     // ---------------------------------------
     // STEP 1: Get conversation history
     // ---------------------------------------
 
-    const history = await getHistory(conversationId);
+    const history = await getHistory(conversationId , userId);
 
 
     // ---------------------------------------
@@ -57,7 +58,9 @@ const chatWithLibrary = async (
     const referencedBook =
         await resolveBookReference(
             question,
-            history
+            history,
+            conversationId, 
+            userId
         );
 
 
@@ -245,14 +248,16 @@ Location: ${book.location || "Not available"}
     // STEP 15: Save conversation
     // ---------------------------------------
 
-    addMessage(
+    await addMessage(
         conversationId,
+        userId,
         "user",
         question
     );
 
-    addMessage(
+    await addMessage(
         conversationId,
+        userId,
         "assistant",
         response.content,
         sources

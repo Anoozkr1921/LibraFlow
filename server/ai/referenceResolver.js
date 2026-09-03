@@ -7,7 +7,8 @@ const {
 const resolveBookReference = async (
     question,
     history,
-    conversationId
+    conversationId,
+    userId
 ) => {
 
     if (!question) {
@@ -107,8 +108,7 @@ const resolveBookReference = async (
 
 
     // ---------------------------------------
-    // Explicit reference:
-    // "that book", "this book"
+    // Explicit reference
     // ---------------------------------------
 
     else if (
@@ -120,10 +120,12 @@ const resolveBookReference = async (
 
         selectedBook =
             await getLastReferencedBook(
-                conversationId
+                conversationId,
+                userId
             );
 
         if (!selectedBook) {
+
             selectedBook =
                 sources[0] || null;
         }
@@ -131,8 +133,7 @@ const resolveBookReference = async (
 
 
     // ---------------------------------------
-    // Pronoun reference:
-    // "it", "its"
+    // Pronoun reference
     // ---------------------------------------
 
     else if (
@@ -142,10 +143,12 @@ const resolveBookReference = async (
 
         selectedBook =
             await getLastReferencedBook(
-                conversationId
+                conversationId,
+                userId
             );
 
         if (!selectedBook) {
+
             selectedBook =
                 sources[0] || null;
         }
@@ -153,16 +156,18 @@ const resolveBookReference = async (
 
 
     // ---------------------------------------
-    // Save newly selected book
+    // Save selected book
     // ---------------------------------------
 
     if (
         selectedBook &&
-        conversationId
+        conversationId &&
+        userId
     ) {
 
         await setLastReferencedBook(
             conversationId,
+            userId,
             selectedBook
         );
     }

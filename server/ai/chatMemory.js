@@ -5,15 +5,19 @@ const Conversation = require("../models/conversationModel");
 // Get conversation history
 // ---------------------------------------
 
-const getHistory = async (conversationId) => {
+const getHistory = async (
+    conversationId,
+    userId
+) => {
 
-    if (!conversationId) {
+    if (!conversationId || !userId) {
         return [];
     }
 
     const conversation =
         await Conversation.findOne({
             conversationId,
+            userId,
         }).lean();
 
     if (!conversation) {
@@ -29,16 +33,18 @@ const getHistory = async (conversationId) => {
 // ---------------------------------------
 
 const getLastReferencedBook = async (
-    conversationId
+    conversationId,
+    userId
 ) => {
 
-    if (!conversationId) {
+    if (!conversationId || !userId) {
         return null;
     }
 
     const conversation =
         await Conversation.findOne({
             conversationId,
+            userId,
         }).lean();
 
     if (!conversation) {
@@ -55,28 +61,33 @@ const getLastReferencedBook = async (
 
 const addMessage = async (
     conversationId,
+    userId,
     role,
     content,
     sources = []
 ) => {
 
-    if (!conversationId) {
+    if (
+        !conversationId ||
+        !userId
+    ) {
         return;
     }
 
 
     // ---------------------------------------
-    // Find existing conversation
+    // Find user's conversation
     // ---------------------------------------
 
     let conversation =
         await Conversation.findOne({
             conversationId,
+            userId,
         });
 
 
     // ---------------------------------------
-    // Create conversation if necessary
+    // Create conversation
     // ---------------------------------------
 
     if (!conversation) {
@@ -84,6 +95,7 @@ const addMessage = async (
         conversation =
             new Conversation({
                 conversationId,
+                userId,
                 messages: [],
                 lastReferencedBook: null,
             });
@@ -117,7 +129,7 @@ const addMessage = async (
 
 
     // ---------------------------------------
-    // Save to MongoDB
+    // Save
     // ---------------------------------------
 
     await conversation.save();
@@ -130,10 +142,15 @@ const addMessage = async (
 
 const setLastReferencedBook = async (
     conversationId,
+    userId,
     book
 ) => {
 
-    if (!conversationId || !book) {
+    if (
+        !conversationId ||
+        !userId ||
+        !book
+    ) {
         return;
     }
 
@@ -141,6 +158,7 @@ const setLastReferencedBook = async (
     await Conversation.findOneAndUpdate(
         {
             conversationId,
+            userId,
         },
 
         {
