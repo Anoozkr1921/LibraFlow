@@ -107,6 +107,7 @@ Book ${index + 1}:
 
 Title: ${book.title}
 Author: ${book.author}
+ISBN: ${book.isbn || "Not available"}
 Category: ${book.category}
 Description: ${book.description || "Not available"}
 Publisher: ${book.publisher || "Not available"}
