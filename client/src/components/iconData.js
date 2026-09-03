@@ -1,0 +1,1 @@
+export const icons = { grid: '◈', books: '▤', loans: '↗', assistant: '✦', users: '◎', settings: '⚙', search: '⌕', arrow: '→', book: '▥', clock: '◷', alert: '!' }

@@ -1,122 +1,32 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import toast, { Toaster } from 'react-hot-toast'
 import './App.css'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Sidebar from './components/Sidebar'
+import AuthModal from './components/AuthModal'
+import Overview from './views/Overview'
+import Catalog from './views/Catalog'
+import Loans from './views/Loans'
+import Assistant from './views/Assistant'
+import Admin from './views/Admin'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function Workspace() {
+  const { user, loading, login, logout } = useAuth()
+  const [active, setActive] = useState('overview')
+  const [authOpen, setAuthOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  if (loading) return <div className="loading-screen">Opening your library…</div>
+  const refresh = () => setRefreshKey((key) => key + 1)
+  const navigate = (view) => setActive(view)
+  const handleBorrowed = () => { refresh(); toast.success('Your reading record is up to date.') }
+  const renderView = () => {
+    if (active === 'catalog') return <Catalog user={user} onAuth={() => setAuthOpen(true)} onBorrowed={handleBorrowed} />
+    if (active === 'loans') return user ? <Loans refreshKey={refreshKey} /> : <Overview user={user} onNavigate={() => setAuthOpen(true)} />
+    if (active === 'assistant') return user ? <Assistant /> : <Overview user={user} onNavigate={() => setAuthOpen(true)} />
+    if (active === 'admin' && user?.role === 'admin') return <Admin />
+    return <Overview user={user} onNavigate={navigate} />
+  }
+  return <div className="app-shell"><Sidebar active={active} onNavigate={navigate} user={user} onLogout={logout} /><main className="main-content"><div className="mobile-top"><span className="brand-mark">L</span><strong>LibraFlow</strong><button onClick={() => setAuthOpen(true)}>{user ? user.name : 'Sign in'}</button></div><div className="content-wrap">{renderView()}</div><footer>LibraFlow <span>•</span> A considered place for curious minds</footer></main>{!user && <button className="signin-float" onClick={() => setAuthOpen(true)}>Sign in <span>→</span></button>}{authOpen && <AuthModal onLogin={async (payload) => { await login(payload); setAuthOpen(false); toast.success('Welcome back.') }} onClose={() => setAuthOpen(false)} />}<Toaster position="bottom-right" toastOptions={{ style: { borderRadius: 4, background: '#17221f', color: '#f9f7f1' } }} /></div>
 }
 
-export default App
+export default function App() { return <AuthProvider><Workspace /></AuthProvider> }
