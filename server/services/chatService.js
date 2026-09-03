@@ -16,6 +16,14 @@ const {
     retrieveAllBooks,
 } = require("../ai/inventoryRetriever");
 
+const {
+    parseStructuredQuery,
+} = require("../ai/structuredQueryParser");
+
+const {
+    searchBooks,
+} = require("../ai/structuredRetriever");
+
 
 const chatWithLibrary = async (question) => {
 
@@ -38,11 +46,6 @@ const chatWithLibrary = async (question) => {
             lowerQuestion.includes(keyword)
     );
 
-
-    // ---------------------------------------
-    // STEP 2: Retrieve relevant books
-    // ---------------------------------------
-
     const queryType = detectQueryType(question);
 
     let books;
@@ -51,25 +54,41 @@ const chatWithLibrary = async (question) => {
 
         books = await retrieveAllBooks();
 
-    } else if (queryType === "availability") {
+    }
+
+    else if (queryType === "availability") {
 
         books = await retrieveBooksByVector(
             question,
             true
         );
 
-    } else {
+    }
+
+    else if (queryType === "structured") {
+
+        const filters =
+            parseStructuredQuery(question);
+
+        books = await searchBooks(filters);
+
+    }
+
+
+    // ---------------------------------------
+    // SEMANTIC SEARCH
+    // ---------------------------------------
+
+    else {
 
         books = await retrieveBooksByVector(
             question,
             false
         );
+
     }
 
-
-    // ---------------------------------------
-    // STEP 3: Create context
-    // ---------------------------------------
+    // Creating context
 
     let context = "";
 

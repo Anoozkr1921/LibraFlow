@@ -1,6 +1,5 @@
 const detectQueryType = (question) => {
     const q = question.toLowerCase().trim();
-
     const inventoryPatterns = [
         "what books do you have",
         "what books are there",
@@ -27,7 +26,6 @@ const detectQueryType = (question) => {
         "borrow",
         "borrowable",
     ];
-
     if (
         availabilityPatterns.some(
             (pattern) => q.includes(pattern)
@@ -35,7 +33,22 @@ const detectQueryType = (question) => {
     ) {
         return "availability";
     }
-
+    const structuredPatterns = [
+        "by ",
+        "written by",
+        "author",
+        "isbn",
+        "category",
+        "published",
+        "publication",
+    ];
+    if (
+        structuredPatterns.some(
+            (pattern) => q.includes(pattern)
+        )
+    ) {
+        return "structured";
+    }
     return "semantic";
 };
 
