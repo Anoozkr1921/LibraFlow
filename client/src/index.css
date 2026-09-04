@@ -71,6 +71,28 @@ body {
 	color: var(--muted);
 }
 
+.loan-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	min-width: 156px;
+}
+
+.loan-actions .outline-button {
+	min-width: 72px;
+	text-align: center;
+}
+
+@media (max-width: 900px) {
+	.loan-actions {
+		grid-column: 2 / -1;
+		justify-content: flex-start;
+		min-width: 0;
+		margin-top: 4px;
+	}
+}
+
 .auth-modal .register-button {
 	background: var(--yellow);
 	color: var(--ink);
