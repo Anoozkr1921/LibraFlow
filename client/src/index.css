@@ -23,6 +23,53 @@ body {
 	border-color: #91c3a4;
 }
 
+.mobile-account {
+	display: none;
+}
+
+.profile-panel {
+	position: relative;
+	width: min(100%, 380px);
+	padding: 34px;
+	background: var(--paper);
+	box-shadow: 0 18px 45px rgba(23, 34, 31, .2);
+}
+
+.profile-avatar {
+	display: grid;
+	place-items: center;
+	width: 56px;
+	height: 56px;
+	margin-bottom: 20px;
+	border-radius: 50%;
+	background: var(--yellow);
+	color: var(--ink);
+	font: 700 23px 'Playfair Display', serif;
+}
+
+.profile-panel h2 {
+	margin: 7px 0 5px;
+	font: 700 27px 'Playfair Display', serif;
+}
+
+.profile-panel p {
+	margin: 0 0 24px;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.profile-logout {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 9px 13px;
+	border: 1px solid #d5b06a;
+	border-radius: 3px;
+	background: #fff6df;
+	color: #795c20;
+	font-size: 12px;
+}
+
 .password-field {
 	position: relative;
 }
@@ -137,6 +184,46 @@ body {
 }
 
 @media (max-width: 640px) {
+	.mobile-account {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		padding: 9px 14px;
+		border-top: 1px solid #34403c;
+		background: #202e2a;
+	}
+
+	.mobile-profile {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		min-width: 0;
+		border: 0;
+		padding: 0;
+		background: none;
+		color: #eaf0e9;
+		font-size: 12px;
+	}
+
+	.mobile-profile .avatar {
+		width: 27px;
+		height: 27px;
+		font-size: 11px;
+	}
+
+	.mobile-profile span:last-child {
+		max-width: 150px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.mobile-account .logout {
+		margin-left: 0;
+		padding: 7px 9px;
+	}
+
 	.site-footer {
 		grid-template-columns: 1fr 1fr;
 		gap: 24px;
