@@ -4,7 +4,7 @@ import { icons } from './iconData'
 const navItems = [
   ['overview', icons.grid, 'Overview'],
   ['catalog', icons.books, 'Book catalog'],
-  ['loans', icons.loans, 'My loans'],
+  ['loans', icons.loans, 'My dues'],
   ['assistant', icons.assistant, 'Library assistant'],
 ]
 

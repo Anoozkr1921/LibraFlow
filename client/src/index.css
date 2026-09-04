@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 body {
-	font-size: 17px;
+	font-size: 18px;
 }
 
 .logout {
@@ -46,6 +46,29 @@ body {
 
 .password-toggle:hover {
 	color: var(--ink);
+}
+
+.book-info .text-button {
+	display: block;
+	width: 100%;
+	margin-top: 14px;
+	padding: 10px 12px;
+	border: 1px solid var(--green);
+	border-radius: 3px;
+	background: var(--green);
+	color: white;
+	font-size: 13px;
+	text-align: center;
+}
+
+.book-info .text-button:hover:not(:disabled) {
+	background: #1d5040;
+}
+
+.book-info .text-button:disabled {
+	border-color: var(--line);
+	background: #ecece5;
+	color: var(--muted);
 }
 
 .auth-modal .register-button {
