@@ -42,6 +42,7 @@ export const borrowApi = {
   all: () => api.get('/borrow').then(unwrap),
   borrow: (bookId) => api.post('/borrow', { bookId }).then(unwrap),
   return: (borrowId) => api.post(`/borrow/return/${borrowId}`).then(unwrap),
+  pay: (borrowId) => api.post(`/borrow/pay/${borrowId}`).then(unwrap),
 }
 
 export const conversationApi = {

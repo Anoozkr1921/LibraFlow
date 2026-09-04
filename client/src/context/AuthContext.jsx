@@ -19,6 +19,8 @@ export function AuthProvider({ children }) {
     return result.user
   }
 
+  const register = (payload) => authApi.register(payload)
+
   const logout = async () => {
     try { await authApi.logout() } finally {
       localStorage.removeItem('libraflow_token')
@@ -26,7 +28,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>
 }
 
 export const useAuth = () => useContext(AuthContext)
