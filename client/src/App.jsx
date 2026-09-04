@@ -11,9 +11,21 @@ import Assistant from './views/Assistant'
 import Admin from './views/Admin'
 import VerificationNotice from './components/VerificationNotice'
 
+const viewPaths = {
+  overview: '/',
+  catalog: '/catalog',
+  loans: '/loans',
+  assistant: '/assistant',
+  admin: '/admin',
+}
+
+const pathViews = Object.fromEntries(Object.entries(viewPaths).map(([view, path]) => [path, view]))
+
+const viewFromLocation = () => pathViews[window.location.pathname] || 'overview'
+
 function Workspace() {
   const { user, loading, login, register, logout } = useAuth()
-  const [active, setActive] = useState('overview')
+  const [active, setActive] = useState(viewFromLocation)
   const [authOpen, setAuthOpen] = useState(false)
   const [emailVerified, setEmailVerified] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -23,9 +35,18 @@ function Workspace() {
     setEmailVerified(true)
     window.history.replaceState({}, document.title, window.location.pathname)
   }, [])
+  useEffect(() => {
+    const handlePopState = () => setActive(viewFromLocation())
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
   if (loading) return <div className="loading-screen">Opening your library…</div>
   const refresh = () => setRefreshKey((key) => key + 1)
-  const navigate = (view) => setActive(view)
+  const navigate = (view) => {
+    const path = viewPaths[view] || viewPaths.overview
+    if (window.location.pathname !== path) window.history.pushState({ view }, '', path)
+    setActive(view)
+  }
   const handleBorrowed = () => { refresh(); toast.success('Your reading record is up to date.') }
   const renderView = () => {
     if (active === 'catalog') return <Catalog user={user} onAuth={() => setAuthOpen(true)} onBorrowed={handleBorrowed} />
