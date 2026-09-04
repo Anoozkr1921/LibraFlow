@@ -18,7 +18,7 @@ export default function Sidebar({ active, onNavigate, user, onLogout }) {
     </nav>
     <div className="sidebar-foot">
       <button className="nav-item"><Icon>{icons.settings}</Icon>Preferences</button>
-      <div className="user-mini"><div className="avatar">{user?.name?.charAt(0)?.toUpperCase() || 'G'}</div><div><strong>{user?.name || 'Guest reader'}</strong><small>{user?.role === 'admin' ? 'Administrator' : 'Member'}</small></div><button className="logout" onClick={onLogout} title="Log out">↗</button></div>
+      <div className="user-mini"><div className="avatar">{user?.name?.charAt(0)?.toUpperCase() || 'G'}</div><div><strong>{user?.name || 'Guest reader'}</strong><small>{user?.role === 'admin' ? 'Administrator' : 'Member'}</small></div><button className="logout" onClick={onLogout} title="Log out"><span aria-hidden="true">↗</span>Log out</button></div>
     </div>
   </aside>
 }

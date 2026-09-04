@@ -4,6 +4,50 @@ body {
 	font-size: 17px;
 }
 
+.logout {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+	padding: 7px 9px;
+	border: 1px solid #52615a;
+	border-radius: 3px;
+	background: #293833;
+	color: #eaf0e9;
+	font: 500 11px 'DM Sans', sans-serif;
+	transform: none;
+}
+
+.logout:hover {
+	background: #395047;
+	border-color: #91c3a4;
+}
+
+.password-field {
+	position: relative;
+}
+
+.auth-modal .password-field input {
+	padding-right: 58px;
+}
+
+.password-toggle {
+	position: absolute;
+	top: 50%;
+	right: 9px;
+	border: 0;
+	padding: 3px;
+	background: none;
+	color: var(--green);
+	font: 500 10px 'DM Mono', monospace;
+	text-transform: uppercase;
+	transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+	color: var(--ink);
+}
+
 .auth-modal .register-button {
 	background: var(--yellow);
 	color: var(--ink);
