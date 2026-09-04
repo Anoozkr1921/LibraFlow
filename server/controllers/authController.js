@@ -29,15 +29,9 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
     const { token } = req.params;
 
-    const result = await verifyEmailService(token);
+    await verifyEmailService(token);
 
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            "Email verified successfully",
-            result
-        )
-    );
+    return res.redirect(`${process.env.CLIENT_URL}/?verified=success`);
 
 });
 

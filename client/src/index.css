@@ -1,1 +1,82 @@
 @import "tailwindcss";
+
+body {
+	font-size: 17px;
+}
+
+.auth-modal .register-button {
+	background: var(--yellow);
+	color: var(--ink);
+	font-size: 13px;
+	padding-block: 13px;
+}
+
+.auth-modal .register-button:hover {
+	background: #d5a53d;
+}
+
+.verification-notice {
+	position: fixed;
+	right: 24px;
+	bottom: 24px;
+	z-index: 10;
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: start;
+	gap: 14px;
+	width: min(380px, calc(100vw - 36px));
+	padding: 20px;
+	background: var(--ink);
+	color: #f9f7f1;
+	border-left: 4px solid var(--yellow);
+	box-shadow: 0 14px 35px rgba(23, 34, 31, .2);
+	animation: verification-slide-in .35s ease-out both;
+}
+
+.verification-icon {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	background: var(--yellow);
+	color: var(--ink);
+	font-weight: 700;
+}
+
+.verification-notice .eyebrow {
+	color: #b7d6bf;
+}
+
+.verification-notice h2 {
+	margin: 4px 0 5px;
+	font: 700 22px 'Playfair Display', serif;
+}
+
+.verification-notice p {
+	margin: 0;
+	color: #c7d0ca;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.verification-close {
+	border: 0;
+	padding: 0;
+	background: none;
+	color: #b7d6bf;
+	font-size: 24px;
+	line-height: 1;
+}
+
+@keyframes verification-slide-in {
+	from { opacity: 0; transform: translateY(18px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+	.verification-notice {
+		right: 18px;
+		bottom: 18px;
+	}
+}
