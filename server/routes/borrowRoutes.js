@@ -12,6 +12,7 @@ const {
 const {
     borrowBook,
     returnBook,
+    payFine,
     getMyBorrowedBooks,
     getAllBorrowRecords,
     getMyBorrowStats,
@@ -30,6 +31,12 @@ router.post(
     "/return/:borrowId",
     verifyJWT,
     returnBook
+);
+
+router.post(
+    "/pay/:borrowId",
+    verifyJWT,
+    payFine
 );
 
 router.get(

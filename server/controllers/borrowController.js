@@ -4,6 +4,7 @@ const ApiResponse = require("../utils/ApiResponse");
 const {
     borrowBookService,
     returnBookService,
+    payFineService,
     getMyBorrowedBooksService,
     getAllBorrowRecordsService,
     getMyBorrowStatsService,
@@ -33,7 +34,7 @@ const returnBook = asyncHandler(async (req, res) => {
 
     const { borrowId } = req.params;
 
-    const borrow = await returnBookService(borrowId);
+    const borrow = await returnBookService(borrowId, req.user._id);
 
     return res.status(200).json(
         new ApiResponse(
@@ -43,6 +44,15 @@ const returnBook = asyncHandler(async (req, res) => {
         )
     );
 
+});
+
+const payFine = asyncHandler(async (req, res) => {
+    const { borrowId } = req.params;
+    const borrow = await payFineService(borrowId, req.user._id);
+
+    return res.status(200).json(
+        new ApiResponse(200, "Due paid successfully.", borrow)
+    );
 });
 
 const getMyBorrowedBooks = asyncHandler(async (req, res) => {
@@ -103,6 +113,7 @@ const getAdminBorrowStats = asyncHandler(async (req, res) => {
 module.exports = {
     borrowBook,
     returnBook,
+    payFine,
     getMyBorrowedBooks,
     getAllBorrowRecords,
     getMyBorrowStats,

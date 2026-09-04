@@ -54,7 +54,7 @@ const borrowBookService = async (studentId, bookId) => {
 };
 // RETURN BOOK
 
-const returnBookService = async (borrowId) => {
+const returnBookService = async (borrowId, studentId) => {
     // Step 1: Validate Borrow ID
     if (!mongoose.Types.ObjectId.isValid(borrowId)) {
         throw new ApiError(
@@ -63,7 +63,7 @@ const returnBookService = async (borrowId) => {
         );
     }
     // Step 2: Find borrow record
-    const borrow = await Borrow.findById(borrowId);
+    const borrow = await Borrow.findOne({ _id: borrowId, student: studentId });
     if (!borrow) {
         throw new ApiError(
             404,
@@ -106,6 +106,29 @@ const returnBookService = async (borrowId) => {
     return borrow;
 };
 
+const payFineService = async (borrowId, studentId) => {
+    if (!mongoose.Types.ObjectId.isValid(borrowId)) {
+        throw new ApiError(400, "Invalid Borrow ID.");
+    }
+
+    const borrow = await Borrow.findOne({ _id: borrowId, student: studentId });
+    if (!borrow) {
+        throw new ApiError(404, "Borrow record not found.");
+    }
+
+    const fineData = calculateFine(borrow.dueDate, borrow.returnDate);
+    const fine = borrow.status === "returned" ? borrow.fine || 0 : fineData.fine;
+    const outstandingFine = Math.max(fine - (borrow.paidFine || 0), 0);
+    if (!outstandingFine) {
+        throw new ApiError(400, "There is no outstanding due for this loan.");
+    }
+
+    borrow.paidFine = (borrow.paidFine || 0) + outstandingFine;
+    borrow.finePaidAt = new Date();
+    await borrow.save();
+    return { ...borrow.toObject(), outstandingFine: 0 };
+};
+
 const getMyBorrowedBooksService = async (studentId) => {
 
     // Find all borrow records belonging to student
@@ -135,6 +158,11 @@ const getMyBorrowedBooksService = async (studentId) => {
             fine: borrow.status === "returned"
                 ? borrow.fine
                 : fineData.fine,
+
+            outstandingFine: Math.max(
+                (borrow.status === "returned" ? borrow.fine : fineData.fine) - (borrow.paidFine || 0),
+                0
+            ),
         };
     });
 
@@ -217,9 +245,9 @@ const getMyBorrowStatsService = async (studentId) => {
         // For returned books, use the stored fine.
         // For active books, use the current calculated fine.
         if (borrow.status === "returned") {
-            totalFine += borrow.fine || 0;
+            totalFine += Math.max((borrow.fine || 0) - (borrow.paidFine || 0), 0);
         } else {
-            totalFine += fineData.fine;
+            totalFine += Math.max(fineData.fine - (borrow.paidFine || 0), 0);
         }
     }
     // Return statistics
@@ -282,12 +310,12 @@ const getAdminBorrowStatsService = async () => {
         // Returned books use their stored fine
         if (borrow.status === "returned") {
 
-            totalFines += borrow.fine || 0;
+            totalFines += Math.max((borrow.fine || 0) - (borrow.paidFine || 0), 0);
 
         } else {
 
             // Active borrowed books use current fine
-            totalFines += fineData.fine;
+            totalFines += Math.max(fineData.fine - (borrow.paidFine || 0), 0);
         }
     }
     return {
@@ -302,6 +330,7 @@ const getAdminBorrowStatsService = async () => {
 module.exports = {
     borrowBookService,
     returnBookService,
+    payFineService,
     getMyBorrowedBooksService,
     getAllBorrowRecordsService,
     getMyBorrowStatsService,
