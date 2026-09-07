@@ -2,7 +2,7 @@ export default function SiteFooter({ onNavigate }) {
   return <footer className="site-footer">
     <div className="footer-brand">
       <strong>Libra<span>Flow</span></strong>
-      <p>A considered place for curious minds.</p>
+      <p>A place to manage your Library.</p>
     </div>
     <nav className="footer-links" aria-label="Footer navigation">
       <button type="button" onClick={() => onNavigate('overview')}>Home</button>
