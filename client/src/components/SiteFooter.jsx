@@ -11,7 +11,7 @@ export default function SiteFooter({ onNavigate }) {
     </nav>
     <div className="footer-contact">
       <a href="https://github.com/Anoozkr1921" target="_blank" rel="noreferrer">GitHub</a>
-      <a href="mailto:anoozburwal1921@gmail.com">anoozburwal1921@gmail.com</a>
+      <a href="mailto:anoozburnwal1921@gmail.com">anoozburwal1921@gmail.com</a>
     </div>
     <div className="footer-bottom">
       <span>© {new Date().getFullYear()} LibraFlow</span>
