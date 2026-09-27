@@ -39,6 +39,7 @@ export const borrowApi = {
   mine: () => api.get('/borrow/my').then(unwrap),
   myStats: () => api.get('/borrow/my/stats').then(unwrap),
   adminStats: () => api.get('/borrow/admin/stats').then(unwrap),
+  adminFines: () => api.get('/borrow/admin/fines').then(unwrap),
   all: () => api.get('/borrow').then(unwrap),
   borrow: (bookId) => api.post('/borrow', { bookId }).then(unwrap),
   return: (borrowId) => api.post(`/borrow/return/${borrowId}`).then(unwrap),
