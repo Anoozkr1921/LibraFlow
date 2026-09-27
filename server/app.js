@@ -39,13 +39,12 @@ app.get("/", (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-
     const statusCode = err.statusCode || err.http_code || 500;
     const message = err.code === "LIMIT_FILE_SIZE"
         ? "Cover image is too large. Please upload an image under 5 MB."
         : err.name === "MulterError"
             ? `Cover image upload failed: ${err.message}`
-            : err.message || err.error?.message || "Internal Server Error";
+            : err.message || err.error?.message || err.error?.error?.message || err.toString?.() || "Internal Server Error";
 
     console.error("API error:", {
         method: req.method,
@@ -53,6 +52,9 @@ app.use((err, req, res, next) => {
         statusCode,
         message,
         name: err.name,
+        code: err.code,
+        providerError: err.error,
+        stack: err.stack,
     });
 
     res.status(statusCode).json({

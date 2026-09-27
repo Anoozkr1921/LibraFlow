@@ -34,7 +34,7 @@ router.post(
     "/",
     verifyJWT,
     isAdmin,
-    upload.single("coverImage"),
+    upload.withErrors,
     addBookValidator,
     validate,
     addBook
@@ -44,7 +44,7 @@ router.put(
     "/:id",
     verifyJWT,
     isAdmin,
-    upload.single("coverImage"),
+    upload.withErrors,
     updateBook
 );
 

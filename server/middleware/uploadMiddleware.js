@@ -17,4 +17,20 @@ const upload = multer({
     },
 });
 
+const uploadWithErrors = (req, res, next) => {
+    upload.single("coverImage")(req, res, (error) => {
+        if (!error) return next();
+
+        console.error("Cover upload error:", {
+            message: error.message,
+            name: error.name,
+            code: error.code,
+            error: error.error,
+            stack: error.stack,
+        });
+        return next(error);
+    });
+};
+
 module.exports = upload;
+module.exports.withErrors = uploadWithErrors;
