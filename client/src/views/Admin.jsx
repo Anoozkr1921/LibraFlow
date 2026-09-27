@@ -5,7 +5,7 @@ import StatCard from '../components/StatCard'
 import { icons } from '../components/iconData'
 
 const formatDate = (date) => date ? new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(date)) : '—'
-const formatMoney = (amount) => `$${Number(amount || 0).toFixed(2)}`
+const formatMoney = (amount) => `Rs. ${Number(amount || 0).toFixed(2)}`
 
 function FineDashboard({ report }) {
 	if (!report) return null
