@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { borrowApi } from '../services/api'
+import { bookApi, borrowApi } from '../services/api'
 import PageHeader from '../components/PageHeader'
 import StatCard from '../components/StatCard'
 import { icons } from '../components/iconData'
@@ -37,16 +37,48 @@ function ReportDashboard({ report }) {
 	return report.type === 'fines' ? <FineDashboard report={report} /> : <ReportTable report={report} />
 }
 
+const emptyBook = { title: '', author: '', isbn: '', category: '', publisher: '', publishedYear: '', language: 'English', totalCopies: '1', location: '', description: '' }
+
+function AddBookForm({ onCreated }) {
+	const [book, setBook] = useState(emptyBook)
+	const [coverImage, setCoverImage] = useState(null)
+	const [saving, setSaving] = useState(false)
+	const [error, setError] = useState('')
+	const [success, setSuccess] = useState('')
+	const update = (event) => setBook((current) => ({ ...current, [event.target.name]: event.target.value }))
+	const submit = async (event) => {
+		event.preventDefault()
+		setError('')
+		setSuccess('')
+		setSaving(true)
+		const payload = new FormData()
+		Object.entries(book).forEach(([key, value]) => payload.append(key, value))
+		if (coverImage) payload.append('coverImage', coverImage)
+		try {
+			await bookApi.create(payload)
+			setBook(emptyBook)
+			setCoverImage(null)
+			setSuccess('Book added to the collection.')
+			onCreated()
+		} catch (err) {
+			setError(err.response?.data?.message || err.userMessage || 'Unable to add this book.')
+		} finally {
+			setSaving(false)
+		}
+	}
+	return <section className="section-block add-book-panel"><div className="section-heading"><div><span className="eyebrow">Collection management</span><h2>Add a book</h2><p className="section-note">Create a catalog title with its copy and shelf details.</p></div></div>{error && <div className="error-banner">{error}</div>}{success && <div className="success-banner">{success}</div>}<form className="book-form" onSubmit={submit}><label>Title<input name="title" value={book.title} onChange={update} required /></label><label>Author<input name="author" value={book.author} onChange={update} required /></label><label>ISBN<input name="isbn" value={book.isbn} onChange={update} required /></label><label>Category<input name="category" value={book.category} onChange={update} required /></label><label>Publisher<input name="publisher" value={book.publisher} onChange={update} /></label><label>Published year<input name="publishedYear" type="number" value={book.publishedYear} onChange={update} /></label><label>Language<input name="language" value={book.language} onChange={update} /></label><label>Total copies<input name="totalCopies" type="number" min="1" value={book.totalCopies} onChange={update} required /></label><label>Location<input name="location" value={book.location} onChange={update} placeholder="e.g. Shelf A-12" /></label><label className="book-form-wide">Description<textarea name="description" value={book.description} onChange={update} rows="3" /></label><label>Cover image<input type="file" accept="image/*" onChange={(event) => setCoverImage(event.target.files?.[0] || null)} /></label><div className="book-form-actions"><button className="primary-button" type="submit" disabled={saving}>{saving ? 'Adding book…' : 'Add book'}</button></div></form></section>
+}
+
 export default function Admin() {
 	const [stats, setStats] = useState(null)
 	const [records, setRecords] = useState([])
 	const [report, setReport] = useState(null)
 	const [loadingReport, setLoadingReport] = useState(false)
+	const [addBookOpen, setAddBookOpen] = useState(false)
 	const [error, setError] = useState('')
 
-	useEffect(() => {
-		Promise.all([borrowApi.adminStats(), borrowApi.all()]).then(([summary, all]) => { setStats(summary); setRecords(all || []) }).catch((err) => setError(err.response?.data?.message || 'Unable to load admin data.'))
-	}, [])
+	const loadAdminData = () => Promise.all([borrowApi.adminStats(), borrowApi.all()]).then(([summary, all]) => { setStats(summary); setRecords(all || []) }).catch((err) => setError(err.response?.data?.message || 'Unable to load admin data.'))
+	useEffect(() => { loadAdminData() }, [])
 
 	const showReport = (reportType) => {
 		setError('')
@@ -54,5 +86,5 @@ export default function Admin() {
 		borrowApi.adminReport(reportType).then(setReport).catch((err) => setError(err.response?.data?.message || `Unable to load the ${reportType} dashboard.`)).finally(() => setLoadingReport(false))
 	}
 
-	return <><PageHeader eyebrow="Operations" title="Admin desk"><span className="live-label"><i /> Live library data</span></PageHeader>{error && <div className="error-banner">{error}</div>}<div className="stats-grid admin-stats"><StatCard label="Book titles" value={stats?.totalBooks} detail="view inventory breakdown" icon={icons.books} onClick={() => showReport('books')} /><StatCard label="Active loans" value={stats?.currentlyBorrowed} detail="view active loan details" icon={icons.loans} tone="green" onClick={() => showReport('loans')} /><StatCard label="Members" value={stats?.totalUsers} detail="view member accounts" icon={icons.users} onClick={() => showReport('members')} /><StatCard label="Total fines" value={stats ? formatMoney(stats.totalFines) : null} detail="view member breakdown" icon={icons.alert} tone="peach" onClick={() => showReport('fines')} /></div>{loadingReport ? <div className="loading-state">Loading report…</div> : <ReportDashboard report={report} />}<section className="section-block"><div className="section-heading"><div><span className="eyebrow">Circulation</span><h2>Latest activity</h2></div></div><div className="loan-list admin-list">{records.slice(0, 8).map((record) => <article className="loan-row" key={record._id}><div className="loan-icon">{record.status === 'returned' ? '✓' : '↗'}</div><div className="loan-title"><strong>{record.book?.title || 'Book unavailable'}</strong><span>{record.student?.name || record.student?.email || 'Member'}</span></div><div className="loan-date"><small>Due date</small><span>{formatDate(record.dueDate)}</span></div><span className={`status-pill ${record.status}`}>{record.status}</span></article>)}</div></section></>
+	return <><PageHeader eyebrow="Operations" title="Admin desk"><div className="page-actions"><span className="live-label"><i /> Live library data</span><button className="primary-button" type="button" onClick={() => setAddBookOpen((open) => !open)}>{addBookOpen ? 'Close form' : '+ Add book'}</button></div></PageHeader>{error && <div className="error-banner">{error}</div>}{addBookOpen && <AddBookForm onCreated={() => { loadAdminData(); if (report?.type === 'books') showReport('books') }} />}<div className="stats-grid admin-stats"><StatCard label="Book titles" value={stats?.totalBooks} detail="view inventory breakdown" icon={icons.books} onClick={() => showReport('books')} /><StatCard label="Active loans" value={stats?.currentlyBorrowed} detail="view active loan details" icon={icons.loans} tone="green" onClick={() => showReport('loans')} /><StatCard label="Members" value={stats?.totalUsers} detail="view member accounts" icon={icons.users} onClick={() => showReport('members')} /><StatCard label="Total fines" value={stats ? formatMoney(stats.totalFines) : null} detail="view member breakdown" icon={icons.alert} tone="peach" onClick={() => showReport('fines')} /></div>{loadingReport ? <div className="loading-state">Loading report…</div> : <ReportDashboard report={report} />}<section className="section-block"><div className="section-heading"><div><span className="eyebrow">Circulation</span><h2>Latest activity</h2></div></div><div className="loan-list admin-list">{records.slice(0, 8).map((record) => <article className="loan-row" key={record._id}><div className="loan-icon">{record.status === 'returned' ? '✓' : '↗'}</div><div className="loan-title"><strong>{record.book?.title || 'Book unavailable'}</strong><span>{record.student?.name || record.student?.email || 'Member'}</span></div><div className="loan-date"><small>Due date</small><span>{formatDate(record.dueDate)}</span></div><span className={`status-pill ${record.status}`}>{record.status}</span></article>)}</div></section></> 
 }
