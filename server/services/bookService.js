@@ -102,8 +102,12 @@ const addBookService = async (data, adminId, file) => {
     // --------------------------------------------------
     // Generate embedding
     // --------------------------------------------------
-    const vector =
-        await embeddings.embedQuery(bookText);
+    let vector = [];
+    try {
+        vector = await embeddings.embedQuery(bookText);
+    } catch (error) {
+        console.error("Book embedding generation failed:", error.message || error);
+    }
 
     // --------------------------------------------------
     // Add embedding to book
