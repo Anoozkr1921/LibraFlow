@@ -12,6 +12,7 @@ import Admin from './views/Admin'
 import VerificationNotice from './components/VerificationNotice'
 import SiteFooter from './components/SiteFooter'
 import ProfilePanel from './components/ProfilePanel'
+import PreferencesPanel from './components/PreferencesPanel'
 
 const viewPaths = {
   overview: '/',
@@ -32,12 +33,17 @@ function Workspace() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [emailVerified, setEmailVerified] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [preferencesOpen, setPreferencesOpen] = useState(false)
+  const [preferences, setPreferences] = useState(() => {
+    try { return { theme: 'light', density: 'comfortable', reducedMotion: false, font: 'editorial', ...JSON.parse(localStorage.getItem('libraflow_preferences')) } } catch { return { theme: 'light', density: 'comfortable', reducedMotion: false, font: 'editorial' } }
+  })
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('verified') !== 'success') return
     setEmailVerified(true)
     window.history.replaceState({}, document.title, window.location.pathname)
   }, [])
+  useEffect(() => { localStorage.setItem('libraflow_preferences', JSON.stringify(preferences)) }, [preferences])
   useEffect(() => {
     const handlePopState = () => setActive(viewFromLocation())
     window.addEventListener('popstate', handlePopState)
@@ -58,7 +64,7 @@ function Workspace() {
     if (active === 'admin' && user?.role === 'admin') return <Admin />
     return <Overview user={user} onNavigate={navigate} />
   }
-  return <div className="app-shell"><Sidebar active={active} onNavigate={navigate} user={user} onLogout={logout} onProfile={() => setProfileOpen(true)} /><main className="main-content"><div className="mobile-top"><div className="brand"><span className="brand-mark">L</span><span>Libra<span>Flow</span></span></div>{active === 'overview' && !user && <button onClick={() => setAuthOpen(true)}>Sign in</button>}</div><div className="content-wrap">{renderView()}</div><SiteFooter onNavigate={navigate} /></main>{active === 'overview' && !user && <button className="signin-float" onClick={() => setAuthOpen(true)}>Sign in <span>→</span></button>}{emailVerified && <VerificationNotice onClose={() => setEmailVerified(false)} />}{profileOpen && <ProfilePanel user={user} onClose={() => setProfileOpen(false)} onLogout={() => { setProfileOpen(false); logout() }} />}{authOpen && <AuthModal onLogin={async (payload) => { await login(payload); setAuthOpen(false); toast.success('Welcome back.') }} onRegister={register} onClose={() => setAuthOpen(false)} />}<Toaster position="bottom-right" toastOptions={{ style: { borderRadius: 4, background: '#17221f', color: '#f9f7f1' } }} /></div>
+  return <div className={`app-shell theme-${preferences.theme} density-${preferences.density} font-${preferences.font || 'editorial'}${preferences.reducedMotion ? ' reduced-motion' : ''}`}><Sidebar active={active} onNavigate={navigate} user={user} onLogout={logout} onPreferences={() => setPreferencesOpen(true)} /><main className="main-content"><div className="mobile-top"><div className="brand"><span className="brand-mark">L</span><span>Libra<span>Flow</span></span></div>{active === 'overview' && !user && <button onClick={() => setAuthOpen(true)}>Sign in</button>}</div><div className="content-wrap">{renderView()}</div><SiteFooter onNavigate={navigate} /></main>{active === 'overview' && !user && <button className="signin-float" onClick={() => setAuthOpen(true)}>Sign in <span>→</span></button>}{emailVerified && <VerificationNotice onClose={() => setEmailVerified(false)} />}{profileOpen && <ProfilePanel user={user} onClose={() => setProfileOpen(false)} onLogout={() => { setProfileOpen(false); logout() }} />}{preferencesOpen && <PreferencesPanel preferences={preferences} onChange={(changes) => setPreferences((current) => ({ ...current, ...changes }))} onClose={() => setPreferencesOpen(false)} />}{authOpen && <AuthModal onLogin={async (payload) => { await login(payload); setAuthOpen(false); toast.success('Welcome back.') }} onRegister={register} onClose={() => setAuthOpen(false)} />}<Toaster position="bottom-right" toastOptions={{ style: { borderRadius: 4, background: '#17221f', color: '#f9f7f1' } }} /></div>
 }
 
 export default function App() { return <AuthProvider><Workspace /></AuthProvider> }

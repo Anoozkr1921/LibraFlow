@@ -8,7 +8,7 @@ const navItems = [
   ['assistant', icons.assistant, 'Library assistant'],
 ]
 
-export default function Sidebar({ active, onNavigate, user, onLogout, onProfile }) {
+export default function Sidebar({ active, onNavigate, user, onLogout, onPreferences }) {
   return <aside className="sidebar">
     <div className="brand"><span className="brand-mark">L</span><span>Libra<span>Flow</span></span></div>
     <div className="workspace-label">Library workspace</div>
@@ -17,9 +17,9 @@ export default function Sidebar({ active, onNavigate, user, onLogout, onProfile 
       {user?.role === 'admin' && <button className={active === 'admin' ? 'nav-item active' : 'nav-item'} onClick={() => onNavigate('admin')}><Icon>{icons.users}</Icon>Admin desk</button>}
     </nav>
     <div className="sidebar-foot">
-      <button className="nav-item"><Icon>{icons.settings}</Icon>Preferences</button>
+      <button className="nav-item" onClick={onPreferences}><Icon>{icons.settings}</Icon>Preferences</button>
       <div className="user-mini"><div className="avatar">{user?.name?.charAt(0)?.toUpperCase() || 'G'}</div><div><strong>{user?.name || 'Guest reader'}</strong><small>{user?.role === 'admin' ? 'Administrator' : 'Member'}</small></div><button className="logout" onClick={onLogout} title="Log out"><span aria-hidden="true">↗</span>Log out</button></div>
     </div>
-    <div className="mobile-account"><button type="button" className="mobile-profile" onClick={onProfile}><span className="avatar">{user?.name?.charAt(0)?.toUpperCase() || 'G'}</span><span>{user?.name || 'Profile'}</span></button><button type="button" className="logout" onClick={onLogout}><span aria-hidden="true">↗</span>Log out</button></div>
+    <div className="mobile-actions"><button type="button" onClick={onPreferences}><Icon>{icons.settings}</Icon><span>Preferences</span></button><button type="button" onClick={onLogout}><span className="mobile-action-icon" aria-hidden="true">↗</span><span>Log out</span></button></div>
   </aside>
 }
