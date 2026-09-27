@@ -90,9 +90,8 @@ const addBookService = async (data, adminId, file) => {
     // Save Cloudinary image information
     // --------------------------------------------------
     if (file) {
-        bookData.coverImage = file.path;
-        bookData.coverImagePublicId =
-            file.filename;
+        bookData.coverImage = file.secure_url || file.path || file.url || "";
+        bookData.coverImagePublicId = file.public_id || file.filename || "";
     }
 
     // --------------------------------------------------
@@ -388,10 +387,10 @@ const updateBookService = async (
 
 
         // Save new image
-        book.coverImage = file.path;
+        book.coverImage = file.secure_url || file.path || file.url || "";
 
         book.coverImagePublicId =
-            file.filename;
+            file.public_id || file.filename || "";
     }
 
 

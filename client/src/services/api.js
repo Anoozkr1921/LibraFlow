@@ -34,6 +34,7 @@ export const bookApi = {
   list: (params) => api.get('/books', { params }).then(unwrap),
   get: (id) => api.get(`/books/${id}`).then(unwrap),
   create: (payload) => api.post('/books', payload).then(unwrap),
+  update: (id, payload) => api.put(`/books/${id}`, payload).then(unwrap),
 }
 
 export const borrowApi = {
