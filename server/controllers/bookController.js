@@ -55,11 +55,8 @@ const getAllBooks = asyncHandler(async (req, res) => {
 });
 
 const updateBook = asyncHandler(async (req, res) => {
-
     const { id } = req.params;
-
     const updatedBook = await updateBookService(id, req.body , req.file);
-
     return res.status(200).json(
         new ApiResponse(
             200,
@@ -67,11 +64,9 @@ const updateBook = asyncHandler(async (req, res) => {
             updatedBook
         )
     );
-
 });
 
 const deleteBook = asyncHandler(async (req, res) => {
-
     const { id } = req.params;
 
     await deleteBookService(id);
@@ -84,7 +79,6 @@ const deleteBook = asyncHandler(async (req, res) => {
     );
 
 });
-
 const restoreBook = asyncHandler(async (req, res) => {
 
     const { id } = req.params;

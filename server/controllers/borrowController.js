@@ -10,6 +10,7 @@ const {
     getMyBorrowStatsService,
     getAdminBorrowStatsService,
     getAdminFineDashboardService,
+    getAdminReportService,
 } = require("../services/borrowService");
 
 const borrowBook = asyncHandler(async (req, res) => {
@@ -123,6 +124,14 @@ const getAdminFineDashboard = asyncHandler(async (req, res) => {
     );
 });
 
+const getAdminReport = asyncHandler(async (req, res) => {
+    const report = await getAdminReportService(req.params.reportType);
+
+    return res.status(200).json(
+        new ApiResponse(200, "Admin report fetched successfully.", report)
+    );
+});
+
 module.exports = {
     borrowBook,
     returnBook,
@@ -132,4 +141,5 @@ module.exports = {
     getMyBorrowStats,
     getAdminBorrowStats,
     getAdminFineDashboard,
+    getAdminReport,
 };

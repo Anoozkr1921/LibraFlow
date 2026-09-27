@@ -376,6 +376,70 @@ const getAdminFineDashboardService = async () => {
         members: membersWithFines,
     };
 };
+
+const getAdminReportService = async (reportType) => {
+    if (reportType === "books") {
+        const books = await Book.find({ isDeleted: { $ne: true } })
+            .select("title author isbn category totalCopies availableCopies status location")
+            .sort({ title: 1 });
+
+        return {
+            type: reportType,
+            title: "Book titles",
+            summary: { totalTitles: books.length, totalCopies: books.reduce((total, book) => total + book.totalCopies, 0), availableCopies: books.reduce((total, book) => total + book.availableCopies, 0) },
+            rows: books,
+        };
+    }
+
+    if (reportType === "loans") {
+        const borrows = await Borrow.find({ status: { $in: ["borrowed", "overdue"] } })
+            .populate("student", "name email")
+            .populate("book", "title author isbn")
+            .sort({ dueDate: 1 });
+
+        return {
+            type: reportType,
+            title: "Active loans",
+            summary: { totalLoans: borrows.length, overdueLoans: 0 },
+            rows: borrows.map((borrow) => {
+                const fineData = calculateFine(borrow.dueDate, borrow.returnDate);
+                return { ...borrow.toObject(), lateDays: fineData.lateDays, outstandingFine: Math.max(fineData.fine - (borrow.paidFine || 0), 0) };
+            }),
+        };
+    }
+
+    if (reportType === "members") {
+        const [users, borrows] = await Promise.all([
+            User.find().select("name email role isVerified createdAt").sort({ name: 1 }),
+            Borrow.find(),
+        ]);
+        const activity = new Map();
+
+        for (const borrow of borrows) {
+            const key = borrow.student.toString();
+            const current = activity.get(key) || { totalBorrowed: 0, activeLoans: 0, outstandingFine: 0 };
+            const fineData = calculateFine(borrow.dueDate, borrow.returnDate);
+            current.totalBorrowed += 1;
+            if (borrow.status === "borrowed" || borrow.status === "overdue") current.activeLoans += 1;
+            current.outstandingFine += Math.max((borrow.status === "returned" ? borrow.fine || 0 : fineData.fine) - (borrow.paidFine || 0), 0);
+            activity.set(key, current);
+        }
+
+        return {
+            type: reportType,
+            title: "Members",
+            summary: { totalMembers: users.length, verifiedMembers: users.filter((user) => user.isVerified).length },
+            rows: users.map((user) => ({ ...user.toObject(), ...(activity.get(user._id.toString()) || { totalBorrowed: 0, activeLoans: 0, outstandingFine: 0 }) })),
+        };
+    }
+
+    if (reportType === "fines") {
+        const dashboard = await getAdminFineDashboardService();
+        return { type: reportType, title: "Total fines", summary: dashboard, rows: dashboard.members };
+    }
+
+    throw new ApiError(400, "Unknown admin report type.");
+};
 module.exports = {
     borrowBookService,
     returnBookService,
@@ -385,4 +449,5 @@ module.exports = {
     getMyBorrowStatsService,
     getAdminBorrowStatsService,
     getAdminFineDashboardService,
+    getAdminReportService,
 };
