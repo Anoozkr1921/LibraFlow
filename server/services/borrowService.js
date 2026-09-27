@@ -327,6 +327,55 @@ const getAdminBorrowStatsService = async () => {
         totalFines,
     };
 };
+
+const getAdminFineDashboardService = async () => {
+    const borrows = await Borrow.find()
+        .populate("student", "name email")
+        .populate("book", "title author isbn")
+        .sort({ dueDate: 1 });
+
+    const members = new Map();
+
+    for (const borrow of borrows) {
+        const fineData = calculateFine(borrow.dueDate, borrow.returnDate);
+        const assessedFine = borrow.status === "returned" ? borrow.fine || 0 : fineData.fine;
+        const paidFine = borrow.paidFine || 0;
+        const outstandingFine = Math.max(assessedFine - paidFine, 0);
+        const memberId = borrow.student?._id?.toString() || "unknown";
+        const member = members.get(memberId) || {
+            member: borrow.student,
+            totalFine: 0,
+            paidFine: 0,
+            outstandingFine: 0,
+            overdueLoans: 0,
+            loans: [],
+        };
+
+        member.totalFine += assessedFine;
+        member.paidFine += paidFine;
+        member.outstandingFine += outstandingFine;
+        if (fineData.lateDays > 0) member.overdueLoans += 1;
+        member.loans.push({
+            ...borrow.toObject(),
+            lateDays: fineData.lateDays,
+            assessedFine,
+            outstandingFine,
+        });
+        members.set(memberId, member);
+    }
+
+    const membersWithFines = [...members.values()]
+        .filter((member) => member.outstandingFine > 0)
+        .sort((first, second) => second.outstandingFine - first.outstandingFine);
+
+    return {
+        totalFine: membersWithFines.reduce((total, member) => total + member.totalFine, 0),
+        totalPaid: membersWithFines.reduce((total, member) => total + member.paidFine, 0),
+        totalOutstanding: membersWithFines.reduce((total, member) => total + member.outstandingFine, 0),
+        memberCount: membersWithFines.length,
+        members: membersWithFines,
+    };
+};
 module.exports = {
     borrowBookService,
     returnBookService,
@@ -335,4 +384,5 @@ module.exports = {
     getAllBorrowRecordsService,
     getMyBorrowStatsService,
     getAdminBorrowStatsService,
+    getAdminFineDashboardService,
 };

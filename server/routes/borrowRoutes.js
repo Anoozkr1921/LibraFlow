@@ -17,6 +17,7 @@ const {
     getAllBorrowRecords,
     getMyBorrowStats,
     getAdminBorrowStats,
+    getAdminFineDashboard,
 } = require("../controllers/borrowController");
 
 router.post(
@@ -63,6 +64,13 @@ router.get(
     verifyJWT,
     isAdmin,
     getAdminBorrowStats
+);
+
+router.get(
+    "/admin/fines",
+    verifyJWT,
+    isAdmin,
+    getAdminFineDashboard
 );
 
 module.exports = router;
